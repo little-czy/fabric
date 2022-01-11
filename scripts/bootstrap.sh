@@ -69,7 +69,7 @@ samplesInstall() {
     cd fabric-samples && git checkout v${VERSION}
   else
     echo "===> Cloning hyperledger/fabric-samples repo and checkout v${VERSION}"
-    git clone -b master git://github.com/hyperledger/fabric-samples.git && cd fabric-samples && git checkout v${VERSION}
+    git clone -b release-1.4 https://gitee.com/czy233/fabric-samples.git && cd fabric-samples && git checkout v${VERSION}
   fi
 }
 
