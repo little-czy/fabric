@@ -79,7 +79,7 @@ samplesInstall() {
 binaryIncrementalDownload() {
       local BINARY_FILE=$1
       local URL=$2
-      curl -f -s -C - ${URL} -o ${BINARY_FILE} || rc=$?
+      wget ${URL} || rc=$?
       # Due to limitations in the current Nexus repo:
       # curl returns 33 when there's a resume attempt with no more bytes to download
       # curl returns 2 after finishing a resumed download
