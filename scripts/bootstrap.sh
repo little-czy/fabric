@@ -134,7 +134,7 @@ binaryDownload() {
 
 binariesInstall() {
   echo "===> Downloading version ${FABRIC_TAG} platform specific fabric binaries"
-  binaryDownload ${BINARY_FILE} https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${VERSION}/${BINARY_FILE}
+  binaryDownload ${BINARY_FILE} https://gitee.com/czy233/fabric/attach_files/941675/download/hyperledger-fabric-linux-amd64-1.4.12.tar.gz
   if [ $? -eq 22 ]; then
      echo
      echo "------> ${FABRIC_TAG} platform specific fabric binary is not available to download <----"
@@ -142,7 +142,7 @@ binariesInstall() {
    fi
 
   echo "===> Downloading version ${CA_TAG} platform specific fabric-ca-client binary"
-  binaryDownload ${CA_BINARY_FILE} https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${CA_VERSION}/${CA_BINARY_FILE}
+  binaryDownload ${CA_BINARY_FILE} https://gitee.com/czy233/fabric-ca/attach_files/941681/download/hyperledger-fabric-ca-linux-amd64-1.4.9.tar.gz
   if [ $? -eq 22 ]; then
      echo
      echo "------> ${CA_TAG} fabric-ca-client binary is not available to download  (Available from 1.1.0-rc1) <----"
