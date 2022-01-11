@@ -69,7 +69,7 @@ samplesInstall() {
     cd fabric-samples && git checkout v${VERSION}
   else
     echo "===> Cloning hyperledger/fabric-samples repo and checkout v${VERSION}"
-    git clone -b master https://gitee.com/czy233/fabric-samples.git && cd fabric-samples && git checkout v${VERSION}
+    git clone -b master https://github.com/hyperledger/fabric-samples.git && cd fabric-samples && git checkout v${VERSION}
   fi
 }
 
@@ -79,7 +79,7 @@ samplesInstall() {
 binaryIncrementalDownload() {
       local BINARY_FILE=$1
       local URL=$2
-      wget ${URL} || rc=$?
+      curl -f -s -C - ${URL} -o ${BINARY_FILE} || rc=$?
       # Due to limitations in the current Nexus repo:
       # curl returns 33 when there's a resume attempt with no more bytes to download
       # curl returns 2 after finishing a resumed download
@@ -126,15 +126,15 @@ binaryDownload() {
               echo "==> There was an error downloading the binary file. Switching to incremental download."
               echo "==> Downloading file..."
               binaryIncrementalDownload ${BINARY_FILE} ${URL}
-	  else
-	      echo "==> Done."
+          else
+            echo "==> Done."
           fi
       fi
 }
 
 binariesInstall() {
   echo "===> Downloading version ${FABRIC_TAG} platform specific fabric binaries"
-  binaryDownload ${BINARY_FILE} https://gitee.com/czy233/fabric/attach_files/941675/download/hyperledger-fabric-linux-amd64-1.4.12.tar.gz
+  binaryDownload ${BINARY_FILE} https://github.com/hyperledger/fabric/releases/download/v${VERSION}/${BINARY_FILE}
   if [ $? -eq 22 ]; then
      echo
      echo "------> ${FABRIC_TAG} platform specific fabric binary is not available to download <----"
@@ -142,7 +142,7 @@ binariesInstall() {
    fi
 
   echo "===> Downloading version ${CA_TAG} platform specific fabric-ca-client binary"
-  binaryDownload ${CA_BINARY_FILE} https://gitee.com/czy233/fabric-ca/attach_files/941681/download/hyperledger-fabric-ca-linux-amd64-1.4.9.tar.gz
+  binaryDownload ${CA_BINARY_FILE} https://github.com/hyperledger/fabric-ca/releases/download/v${CA_VERSION}/${CA_BINARY_FILE}
   if [ $? -eq 22 ]; then
      echo
      echo "------> ${CA_TAG} fabric-ca-client binary is not available to download  (Available from 1.1.0-rc1) <----"
