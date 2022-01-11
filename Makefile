@@ -55,7 +55,7 @@ BASEIMAGE_RELEASE=0.4.22
 ifeq ($(PROJECT_NAME),true)
 PROJECT_NAME = $(PROJECT_NAME)/fabric
 else
-PROJECT_NAME = fabric
+PROJECT_NAME = hyperledger/fabric
 endif
 
 BUILD_DIR ?= .build
@@ -64,7 +64,7 @@ EXTRA_VERSION ?= $(shell git rev-parse --short HEAD)
 PROJECT_VERSION=$(BASE_VERSION)-snapshot-$(EXTRA_VERSION)
 TWO_DIGIT_VERSION = $(shell echo $(BASE_VERSION) | cut -d '.' -f 1,2)
 
-PKGNAME = $(PROJECT_NAME)
+PKGNAME = github.com/$(PROJECT_NAME)
 CGO_FLAGS = CGO_CFLAGS=" "
 ARCH=$(shell go env GOARCH)
 MARCH=$(shell go env GOOS)-$(shell go env GOARCH)
