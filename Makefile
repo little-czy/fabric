@@ -223,7 +223,7 @@ generate-metrics-doc: buildenv
 $(BUILD_DIR)/%/chaintool: Makefile
 	@echo "Installing chaintool"
 	@mkdir -p $(@D)
-	@cp deps/deps_bin/chaintool > $@
+	@cp deps/deps_bin/chaintool $@
 	chmod +x $@
 
 # We (re)build a package within a docker context but persist the $GOPATH/pkg
