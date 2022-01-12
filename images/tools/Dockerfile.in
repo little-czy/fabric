@@ -13,8 +13,11 @@ RUN make configtxgen configtxlator cryptogen peer discover idemixgen GO_TAGS=${G
 
 FROM _BASE_NS_/fabric-baseimage:_BASE_TAG_
 ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
-RUN  sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
-RUN  apt-get clean
+# ignore "apt-utils is not installed" warning
+RUN apt-get install --assume-yes apt-utils
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN apt-get clean
 RUN apt-get update && apt-get install -y jq
 VOLUME /etc/hyperledger/fabric
 COPY --from=builder /opt/gopath/src/github.com/hyperledger/fabric/.build/bin /usr/local/bin
