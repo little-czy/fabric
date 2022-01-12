@@ -27,7 +27,8 @@ go.fqp.mockery       := github.com/vektra/mockery/cmd/mockery
 go.fqp.protoc-gen-go := github.com/golang/protobuf/protoc-gen-go
 
 .PHONY: gotools-install
-gotools-install: $(patsubst %,$(GOTOOLS_BINDIR)/%, $(GOTOOLS))
+# gotools-install: $(patsubst %,$(GOTOOLS_BINDIR)/%, $(GOTOOLS))
+gotools-install: cp /opt/gotools/tmp/* $(GOTOOLS_BINDIR)
 
 .PHONY: gotools-clean
 gotools-clean:

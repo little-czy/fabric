@@ -254,6 +254,7 @@ $(BUILD_DIR)/docker/gotools: gotools.mk
 	@mkdir -p $@/bin $@/obj $(BUILD_DIR)/docker/gocache
 	@$(DRUN) \
 		-v $(abspath $@):/opt/gotools \
+		-v $(abspath deps/deps_bin):/opt/gotools/tmp \
 		-w /opt/gopath/src/$(PKGNAME) \
 		-v $(abspath $(BUILD_DIR)/docker/gocache):/opt/gopath/cache \
 		-e GOCACHE=/opt/gopath/cache \
