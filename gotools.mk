@@ -9,22 +9,13 @@ GOTOOLS_GOPATH ?= $(BUILD_DIR)/gotools
 GOTOOLS_BINDIR ?= $(GOPATH)/bin
 
 # go tool->path mapping
-# go.fqp.counterfeiter := github.com/maxbrunsfeld/counterfeiter
-# go.fqp.gocov         := github.com/axw/gocov/gocov
-# go.fqp.gocov-xml     := github.com/AlekSi/gocov-xml
-# go.fqp.goimports     := golang.org/x/tools/cmd/goimports
-# go.fqp.golint        := golang.org/x/lint/golint
-# go.fqp.misspell      := github.com/client9/misspell/cmd/misspell
-# go.fqp.mockery       := github.com/vektra/mockery
 go.fqp.counterfeiter := github.com/maxbrunsfeld/counterfeiter/v6
-go.fqp.ginkgo        := github.com/onsi/ginkgo/ginkgo
 go.fqp.gocov         := github.com/axw/gocov/gocov
 go.fqp.gocov-xml     := github.com/AlekSi/gocov-xml
 go.fqp.goimports     := golang.org/x/tools/cmd/goimports
 go.fqp.golint        := golang.org/x/lint/golint
 go.fqp.misspell      := github.com/client9/misspell/cmd/misspell
-go.fqp.mockery       := github.com/vektra/mockery/cmd/mockery
-go.fqp.protoc-gen-go := github.com/golang/protobuf/protoc-gen-go
+go.fqp.mockery       := github.com/vektra/mockery
 
 .PHONY: gotools-install
 gotools-install: $(patsubst %,$(GOTOOLS_BINDIR)/%, $(GOTOOLS))
