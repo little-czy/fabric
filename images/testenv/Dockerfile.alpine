@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 FROM golang:1.14.12-alpine as builder
-
+RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache \
 	alpine-sdk \
 	autoconf \
@@ -36,6 +36,7 @@ WORKDIR $GOPATH/src/github.com/hyperledger/fabric
 RUN EXECUTABLES= make gotools
 
 FROM golang:1.13.12-alpine
+RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache \
 	gcc \
 	bash \
