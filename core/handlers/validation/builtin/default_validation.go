@@ -18,7 +18,6 @@ import (
 	. "github.com/hyperledger/fabric/core/handlers/validation/api/policies"
 	. "github.com/hyperledger/fabric/core/handlers/validation/api/state"
 	v12 "github.com/hyperledger/fabric/core/handlers/validation/builtin/v12"
-	v13 "github.com/hyperledger/fabric/core/handlers/validation/builtin/v13"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/pkg/errors"
 )
@@ -130,7 +129,8 @@ func (v *DefaultValidation) Init(dependencies ...validation.Dependency) error {
 
 	v.Capabilities = c
 	v.TxValidatorV1_2 = v12.New(c, sf, d, pe)
-	v.TxValidatorV1_3 = v13.New(c, sf, d, pe)
+	//my code
+	v.TxValidatorV1_3 = v12.New(c, sf, d, pe)
 
 	return nil
 }
