@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
 	"github.com/hyperledger/fabric/common/configtx"
+	commonerrors "github.com/hyperledger/fabric/common/errors"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/chaincode/platforms"
 	"github.com/hyperledger/fabric/core/chaincode/platforms/golang"
@@ -340,31 +341,31 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 			}
 
 			// Validate tx with vscc and policy
-			// logger.Debug("Validating transaction vscc tx validate")
-			// err, cde := v.Vscc.VSCCValidateTx(tIdx, payload, d, block)
-			// if err != nil {
-			// 	logger.Errorf("VSCCValidateTx for transaction txId = %s returned error: %s", txID, err)
-			// 	switch err.(type) {
-			// 	case *commonerrors.VSCCExecutionFailureError:
-			// 		results <- &blockValidationResult{
-			// 			tIdx: tIdx,
-			// 			err:  err,
-			// 		}
-			// 		return
-			// 	case *commonerrors.VSCCInfoLookupFailureError:
-			// 		results <- &blockValidationResult{
-			// 			tIdx: tIdx,
-			// 			err:  err,
-			// 		}
-			// 		return
-			// 	default:
-			// 		results <- &blockValidationResult{
-			// 			tIdx:           tIdx,
-			// 			validationCode: cde,
-			// 		}
-			// 		return
-			// 	}
-			// }
+			logger.Debug("Validating transaction vscc tx validate")
+			err, cde := v.Vscc.VSCCValidateTx(tIdx, payload, d, block)
+			if err != nil {
+				logger.Errorf("VSCCValidateTx for transaction txId = %s returned error: %s", txID, err)
+				switch err.(type) {
+				case *commonerrors.VSCCExecutionFailureError:
+					results <- &blockValidationResult{
+						tIdx: tIdx,
+						err:  err,
+					}
+					return
+				case *commonerrors.VSCCInfoLookupFailureError:
+					results <- &blockValidationResult{
+						tIdx: tIdx,
+						err:  err,
+					}
+					return
+				default:
+					results <- &blockValidationResult{
+						tIdx:           tIdx,
+						validationCode: cde,
+					}
+					return
+				}
+			}
 
 			invokeCC, upgradeCC, err := v.getTxCCInstance(payload)
 			if err != nil {
