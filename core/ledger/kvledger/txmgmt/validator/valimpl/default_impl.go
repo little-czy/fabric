@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package valimpl
 
 import (
+	"time"
+
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/ledger"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
@@ -50,6 +52,8 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 
 	logger.Debug("preprocessing ProtoBlock...")
 
+	startTime := time.Now()
+
 	if blockCache.BCache != nil {
 		if internalBlock, txsStatInfo, err = preprocessProtoBlockUsingCache(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
 			return nil, nil, err
@@ -75,6 +79,9 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	for i := range txsFilter {
 		txsStatInfo[i].ValidationCode = txsFilter.Flag(i)
 	}
+
+	logger.Infof("ValidateAndPrepareBatch finished in %dms", time.Since(startTime).Milliseconds())
+
 	return &privacyenabledstate.UpdateBatch{
 		PubUpdates:  pubAndHashUpdates.PubUpdates,
 		HashUpdates: pubAndHashUpdates.HashUpdates,
