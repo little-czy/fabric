@@ -493,6 +493,8 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
 	blockCache.BCache.TxsCache[tIdx].Payl = payload
 
+	putilsLogger.Infof("---validate blockCache : %v", blockCache.BCache.TxsCache[tIdx].Chdr)
+
 	// validate the signature in the envelope
 	err = checkSignatureFromCreator(shdr.Creator, e.Signature, e.Payload, chdr.ChannelId)
 	if err != nil {
