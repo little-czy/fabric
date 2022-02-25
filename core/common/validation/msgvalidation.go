@@ -22,6 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
 	"github.com/hyperledger/fabric/common/flogging"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/msp"
@@ -395,6 +396,102 @@ func ValidateTransaction(e *common.Envelope, c channelconfig.ApplicationCapabili
 		putilsLogger.Errorf("validateCommonHeader returns err %s", err)
 		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
 	}
+
+	// validate the signature in the envelope
+	err = checkSignatureFromCreator(shdr.Creator, e.Signature, e.Payload, chdr.ChannelId)
+	if err != nil {
+		putilsLogger.Errorf("checkSignatureFromCreator returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_CREATOR_SIGNATURE
+	}
+
+	// TODO: ensure that creator can transact with us (some ACLs?) which set of APIs is supposed to give us this info?
+
+	// continue the validation in a way that depends on the type specified in the header
+	switch common.HeaderType(chdr.Type) {
+	case common.HeaderType_ENDORSER_TRANSACTION:
+		// Verify that the transaction ID has been computed properly.
+		// This check is needed to ensure that the lookup into the ledger
+		// for the same TxID catches duplicates.
+		err = utils.CheckTxID(
+			chdr.TxId,
+			shdr.Nonce,
+			shdr.Creator)
+
+		if err != nil {
+			putilsLogger.Errorf("CheckTxID returns err %s", err)
+			return nil, pb.TxValidationCode_BAD_PROPOSAL_TXID
+		}
+
+		err = validateEndorserTransaction(payload.Data, payload.Header)
+		putilsLogger.Debugf("ValidateTransactionEnvelope returns err %s", err)
+
+		if err != nil {
+			putilsLogger.Errorf("validateEndorserTransaction returns err %s", err)
+			return payload, pb.TxValidationCode_INVALID_ENDORSER_TRANSACTION
+		} else {
+			return payload, pb.TxValidationCode_VALID
+		}
+	case common.HeaderType_CONFIG:
+		// Config transactions have signatures inside which will be validated, especially at genesis there may be no creator or
+		// signature on the outermost envelope
+
+		err = validateConfigTransaction(payload.Data, payload.Header)
+
+		if err != nil {
+			putilsLogger.Errorf("validateConfigTransaction returns err %s", err)
+			return payload, pb.TxValidationCode_INVALID_CONFIG_TRANSACTION
+		} else {
+			return payload, pb.TxValidationCode_VALID
+		}
+	case common.HeaderType_TOKEN_TRANSACTION:
+		// Verify that the transaction ID has been computed properly.
+		// This check is needed to ensure that the lookup into the ledger
+		// for the same TxID catches duplicates.
+		err = utils.CheckTxID(
+			chdr.TxId,
+			shdr.Nonce,
+			shdr.Creator)
+
+		if err != nil {
+			putilsLogger.Errorf("CheckTxID returns err %s", err)
+			return nil, pb.TxValidationCode_BAD_PROPOSAL_TXID
+		}
+
+		return payload, pb.TxValidationCode_VALID
+	default:
+		return nil, pb.TxValidationCode_UNSUPPORTED_TX_PAYLOAD
+	}
+}
+
+// ValidateTransaction checks that the transaction envelope is properly formed
+func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int) (*common.Payload, pb.TxValidationCode) {
+	putilsLogger.Debugf("ValidateTransactionEnvelope starts for envelope %p", e)
+
+	// check for nil argument
+	if e == nil {
+		putilsLogger.Errorf("Error: nil envelope")
+		return nil, pb.TxValidationCode_NIL_ENVELOPE
+	}
+
+	// get the payload from the envelope
+	payload, err := utils.GetPayload(e)
+	if err != nil {
+		putilsLogger.Errorf("GetPayload returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_PAYLOAD
+	}
+
+	putilsLogger.Debugf("Header is %s", payload.Header)
+
+	// validate the header
+	chdr, shdr, err := validateCommonHeader(payload.Header)
+	if err != nil {
+		putilsLogger.Errorf("validateCommonHeader returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
+	}
+
+	// ----mytest 缓存chdr
+	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
+	blockCache.BCache.TxsCache[tIdx].Payl = payload
 
 	// validate the signature in the envelope
 	err = checkSignatureFromCreator(shdr.Creator, e.Signature, e.Payload, chdr.ChannelId)

@@ -21,6 +21,7 @@ import (
 	"github.com/hyperledger/fabric/core/common/sysccprovider"
 	"github.com/hyperledger/fabric/core/common/validation"
 	"github.com/hyperledger/fabric/core/ledger"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
 	"github.com/hyperledger/fabric/msp"
 	"github.com/hyperledger/fabric/protos/common"
@@ -146,7 +147,12 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	// array of txids
 	txidArray := make([]string, len(block.Data.Data))
 
+	blockCache.BCache.TxsCache = make([]*blockCache.TransactionCache, len(block.Data.Data))
+	// make之后切片大小被初始化，切片的内容为nil 空指针
+	logger.Debugf("---mytest init privdata.BCache.TxsCache, len: %d, cap :%d ", len(blockCache.BCache.TxsCache), cap(blockCache.BCache.TxsCache))
+
 	results := make(chan *blockValidationResult)
+
 	go func() {
 		for tIdx, d := range block.Data.Data {
 			// ensure that we don't have too many concurrent validation workers
@@ -292,13 +298,19 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 		// job for VSCC below
 		logger.Debugf("[%s] validateTx starts for block %p env %p txn %d", v.ChainID, block, env, tIdx)
 		defer logger.Debugf("[%s] validateTx completes for block %p env %p txn %d", v.ChainID, block, env, tIdx)
+
+		// ---M1.4 缓存env和TIdx
+		blockCache.BCache.TxsCache[tIdx] = &blockCache.TransactionCache{IndexInBlock: tIdx}
+		blockCache.BCache.TxsCache[tIdx].Env = env
+		logger.Debugf("----mytest validate TxsCache %v", blockCache.BCache.TxsCache[tIdx])
+
 		var payload *common.Payload
 		var err error
 		var txResult peer.TxValidationCode
 		var txsChaincodeName *sysccprovider.ChaincodeInstance
 		var txsUpgradedChaincode *sysccprovider.ChaincodeInstance
 
-		if payload, txResult = validation.ValidateTransaction(env, v.Support.Capabilities()); txResult != peer.TxValidationCode_VALID {
+		if payload, txResult = validation.ValidateTransactionWithTxIndex(env, v.Support.Capabilities(), tIdx); txResult != peer.TxValidationCode_VALID {
 			logger.Errorf("Invalid transaction with index %d", tIdx)
 			results <- &blockValidationResult{
 				tIdx:           tIdx,
@@ -332,6 +344,9 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 		if common.HeaderType(chdr.Type) == common.HeaderType_ENDORSER_TRANSACTION {
 
 			txID = chdr.TxId
+
+			// --M1.4 缓存TxId
+			blockCache.BCache.TxsCache[tIdx].ID = txID
 
 			// Check duplicate transactions
 			erroneousResultEntry := v.checkTxIdDupsLedger(tIdx, chdr, v.Support.Ledger())
