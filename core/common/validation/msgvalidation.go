@@ -371,6 +371,97 @@ func validateEndorserTransaction(data []byte, hdr *common.Header) error {
 	return nil
 }
 
+// validateEndorserTransaction validates the payload of a
+// transaction assuming its type is ENDORSER_TRANSACTION
+func validateEndorserTransactionWithIndex(data []byte, hdr *common.Header, tIdx int) error {
+	putilsLogger.Debugf("validateEndorserTransaction starts for data %p, header %s", data, hdr)
+
+	// check for nil argument
+	if data == nil || hdr == nil {
+		return errors.New("nil arguments")
+	}
+
+	// if the type is ENDORSER_TRANSACTION we unmarshal a Transaction message
+	tx, err := utils.GetTransaction(data)
+	if err != nil {
+		return err
+	}
+
+	// ----M1.4 缓存tx
+	blockCache.BCache.TxsCache[tIdx].Tx = tx
+
+	// check for nil argument
+	if tx == nil {
+		return errors.New("nil transaction")
+	}
+
+	// TODO: validate tx.Version
+
+	// TODO: validate ChaincodeHeaderExtension
+
+	// hlf version 1 only supports a single action per transaction
+	if len(tx.Actions) != 1 {
+		return errors.Errorf("only one action per transaction is supported, tx contains %d", len(tx.Actions))
+	}
+
+	putilsLogger.Debugf("validateEndorserTransaction info: there are %d actions", len(tx.Actions))
+
+	for _, act := range tx.Actions {
+		// check for nil argument
+		if act == nil {
+			return errors.New("nil action")
+		}
+
+		// if the type is ENDORSER_TRANSACTION we unmarshal a SignatureHeader
+		sHdr, err := utils.GetSignatureHeader(act.Header)
+		if err != nil {
+			return err
+		}
+
+		// validate the SignatureHeader - here we actually only
+		// care about the nonce since the creator is in the outer header
+		err = validateSignatureHeader(sHdr)
+		if err != nil {
+			return err
+		}
+
+		putilsLogger.Debugf("validateEndorserTransaction info: signature header is valid")
+
+		// if the type is ENDORSER_TRANSACTION we unmarshal a ChaincodeActionPayload
+		ccActionPayload, err := utils.GetChaincodeActionPayload(act.Payload)
+		if err != nil {
+			return err
+		}
+
+		// extract the proposal response payload
+		prp, err := utils.GetProposalResponsePayload(ccActionPayload.Action.ProposalResponsePayload)
+		if err != nil {
+			return err
+		}
+
+		// ----mytest 缓存ccActionPayload和prp 目前fabirc中交易里的action只为1个
+		blockCache.BCache.TxsCache[tIdx].CcPayload = ccActionPayload
+		blockCache.BCache.TxsCache[tIdx].PRespPayload = prp
+
+		// build the original header by stitching together
+		// the common ChannelHeader and the per-action SignatureHeader
+		hdrOrig := &common.Header{ChannelHeader: hdr.ChannelHeader, SignatureHeader: act.Header}
+
+		// compute proposalHash
+		pHash, err := utils.GetProposalHash2(hdrOrig, ccActionPayload.ChaincodeProposalPayload)
+		if err != nil {
+			return err
+		}
+
+		// ensure that the proposal hash matches
+		if bytes.Compare(pHash, prp.ProposalHash) != 0 {
+			return errors.New("proposal hash does not match")
+		}
+	}
+
+	return nil
+}
+
 // ValidateTransaction checks that the transaction envelope is properly formed
 func ValidateTransaction(e *common.Envelope, c channelconfig.ApplicationCapabilities) (*common.Payload, pb.TxValidationCode) {
 	putilsLogger.Debugf("ValidateTransactionEnvelope starts for envelope %p", e)
@@ -489,11 +580,11 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
 	}
 
-	// ----mytest 缓存chdr
+	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
 	blockCache.BCache.TxsCache[tIdx].Payl = payload
 
-	putilsLogger.Infof("---validate blockCache : %v", blockCache.BCache.TxsCache[tIdx].Chdr)
+	putilsLogger.Debugf("---validate blockCache : %v", blockCache.BCache.TxsCache[tIdx].Chdr)
 
 	// validate the signature in the envelope
 	err = checkSignatureFromCreator(shdr.Creator, e.Signature, e.Payload, chdr.ChannelId)
@@ -510,6 +601,9 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		// Verify that the transaction ID has been computed properly.
 		// This check is needed to ensure that the lookup into the ledger
 		// for the same TxID catches duplicates.
+
+		// TODO --M1.4 这里验证了TxID
+
 		err = utils.CheckTxID(
 			chdr.TxId,
 			shdr.Nonce,
@@ -520,7 +614,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 			return nil, pb.TxValidationCode_BAD_PROPOSAL_TXID
 		}
 
-		err = validateEndorserTransaction(payload.Data, payload.Header)
+		err = validateEndorserTransactionWithIndex(payload.Data, payload.Header, tIdx)
 		putilsLogger.Debugf("ValidateTransactionEnvelope returns err %s", err)
 
 		if err != nil {
@@ -545,6 +639,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		// Verify that the transaction ID has been computed properly.
 		// This check is needed to ensure that the lookup into the ledger
 		// for the same TxID catches duplicates.
+
 		err = utils.CheckTxID(
 			chdr.TxId,
 			shdr.Nonce,

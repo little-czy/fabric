@@ -319,14 +319,23 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 			return
 		}
 
-		chdr, err := utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
-		if err != nil {
-			logger.Warningf("Could not unmarshal channel header, err %s, skipping", err)
-			results <- &blockValidationResult{
-				tIdx:           tIdx,
-				validationCode: peer.TxValidationCode_INVALID_OTHER_REASON,
+		// ----mytest chdr已经发序列化过一次，这里是验证阶段的第二次
+		// ----使用已经缓存的chdr
+		var chdr *common.ChannelHeader
+
+		if blockCache.BCache.TxsCache[tIdx].Chdr != nil {
+			chdr = blockCache.BCache.TxsCache[tIdx].Chdr
+			logger.Debugf("Chdr is cached,txid is:%s", blockCache.BCache.TxsCache[tIdx].Chdr.TxId)
+		} else {
+			chdr, err = utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
+			if err != nil {
+				logger.Warningf("Could not unmarshal channel header, err %s, skipping", err)
+				results <- &blockValidationResult{
+					tIdx:           tIdx,
+					validationCode: peer.TxValidationCode_INVALID_OTHER_REASON,
+				}
+				return
 			}
-			return
 		}
 
 		channel := chdr.ChannelId
@@ -457,6 +466,8 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 			return
 		}
 
+		// TODO --M1.4 这里为什么要marshal
+
 		if _, err := proto.Marshal(env); err != nil {
 			logger.Warningf("Cannot marshal transaction: %s", err)
 			results <- &blockValidationResult{
@@ -494,6 +505,7 @@ func (v *TxValidator) checkTxIdDupsLedger(tIdx int, chdr *common.ChannelHeader, 
 	// Retrieve the transaction identifier of the input header
 	txID := chdr.TxId
 
+	// 在这里要进行加锁
 	// Look for a transaction with the same identifier inside the ledger
 	_, err := ldgr.GetTransactionByID(txID)
 

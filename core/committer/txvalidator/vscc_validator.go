@@ -19,6 +19,7 @@ import (
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/core/common/sysccprovider"
 	validation "github.com/hyperledger/fabric/core/handlers/validation/api"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/peer"
@@ -50,16 +51,26 @@ func (v *VsccValidatorImpl) VSCCValidateTx(seq int, payload *common.Payload, env
 	chainID := v.chainID
 	logger.Debugf("[%s] VSCCValidateTx starts for bytes %p", chainID, envBytes)
 
+	// --M1.4 hdrExt只使用了一次，不对它进行缓存
 	// get header extensions so we have the chaincode ID
 	hdrExt, err := utils.GetChaincodeHeaderExtension(payload.Header)
 	if err != nil {
 		return err, peer.TxValidationCode_BAD_HEADER_EXTENSION
 	}
 
+	// --M1.4 第三次chdr直接使用缓存数据
 	// get channel header
-	chdr, err := utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
-	if err != nil {
-		return err, peer.TxValidationCode_BAD_CHANNEL_HEADER
+
+	var chdr *common.ChannelHeader
+
+	if blockCache.BCache.TxsCache[seq].Chdr != nil {
+		chdr = blockCache.BCache.TxsCache[seq].Chdr
+		logger.Debugf("Chdr is cached,txid is:%s", blockCache.BCache.TxsCache[seq].Chdr.TxId)
+	} else {
+		chdr, err = utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
+		if err != nil {
+			return err, peer.TxValidationCode_BAD_CHANNEL_HEADER
+		}
 	}
 
 	/* obtain the list of namespaces we're writing stuff to;
@@ -69,14 +80,33 @@ func (v *VsccValidatorImpl) VSCCValidateTx(seq int, payload *common.Payload, env
 	   3) does it write to any cc that cannot be invoked? */
 	writesToLSCC := false
 	writesToNonInvokableSCC := false
-	respPayload, err := utils.GetActionFromEnvelope(envBytes)
+
+	var respPayload *peer.ChaincodeAction
+	if blockCache.BCache.TxsCache[seq].PRespPayload != nil {
+		logger.Debugf("---mytest blockCache.BCache.TxsCache[%d].PRespPayload != nil ", seq)
+		if blockCache.BCache.TxsCache[seq].PRespPayload.Extension == nil {
+			err = errors.New("response payload is missing extension")
+		} else {
+			respPayload, err = utils.GetChaincodeAction(blockCache.BCache.TxsCache[seq].PRespPayload.Extension)
+		}
+	} else {
+		respPayload, err = utils.GetActionFromEnvelope(envBytes)
+	}
+
 	if err != nil {
 		return errors.WithMessage(err, "GetActionFromEnvelope failed"), peer.TxValidationCode_BAD_RESPONSE_PAYLOAD
 	}
+
+	// --M1.4 缓存respPayload
+	blockCache.BCache.TxsCache[seq].RespPayload = respPayload
+
 	txRWSet := &rwsetutil.TxRwSet{}
 	if err = txRWSet.FromProtoBytes(respPayload.Results); err != nil {
 		return errors.WithMessage(err, "txRWSet.FromProtoBytes failed"), peer.TxValidationCode_BAD_RWSET
 	}
+
+	// --M1.4 缓存txRWSet
+	blockCache.BCache.TxsCache[seq].Rwset = txRWSet
 
 	// Verify the header extension and response payload contain the ChaincodeId
 	if hdrExt.ChaincodeId == nil {
@@ -186,6 +216,7 @@ func (v *VsccValidatorImpl) VSCCValidateTx(seq int, payload *common.Payload, env
 
 		// validate *EACH* read write set according to its chaincode's endorsement policy
 		for _, ns := range wrNamespace {
+			// TODO 此过程需要继续往下研究
 			// Get latest chaincode version, vscc and validate policy
 			txcc, vscc, policy, err := v.GetInfoForValidate(chdr, ns)
 			if err != nil {
