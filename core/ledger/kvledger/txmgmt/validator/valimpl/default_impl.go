@@ -9,6 +9,7 @@ package valimpl
 import (
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/ledger"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/txmgr"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/validator"
@@ -48,8 +49,15 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	var err error
 
 	logger.Debug("preprocessing ProtoBlock...")
-	if internalBlock, txsStatInfo, err = preprocessProtoBlock(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
-		return nil, nil, err
+
+	if blockCache.BCache != nil {
+		if internalBlock, txsStatInfo, err = preprocessProtoBlockUsingCache(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
+			return nil, nil, err
+		}
+	} else {
+		if internalBlock, txsStatInfo, err = preprocessProtoBlock(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
+			return nil, nil, err
+		}
 	}
 
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {

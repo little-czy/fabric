@@ -293,6 +293,9 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 
 	purgeStart := time.Now()
 
+	// ---mytest 清空缓存
+	blockCache.BCache = nil
+
 	if len(blockAndPvtData.PvtData) > 0 {
 		// Finally, purge all transactions in block - valid or not valid.
 		if err := c.PurgeByTxids(privateInfo.txns); err != nil {

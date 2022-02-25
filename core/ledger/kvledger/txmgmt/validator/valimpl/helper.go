@@ -12,6 +12,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/ledger"
 	"github.com/hyperledger/fabric/core/ledger/customtx"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb"
@@ -161,6 +162,82 @@ func preprocessProtoBlock(txMgr txmgr.TxMgr,
 		}
 		if txRWSet != nil {
 			txStatInfo.NumCollections = txRWSet.NumCollections()
+			if err := validateWriteset(txRWSet, validateKVFunc); err != nil {
+				logger.Warningf("Channel [%s]: Block [%d] Transaction index [%d] TxId [%s]"+
+					" marked as invalid. Reason code [%s]",
+					chdr.GetChannelId(), block.Header.Number, txIndex, chdr.GetTxId(), peer.TxValidationCode_INVALID_WRITESET)
+				txsFilter.SetFlag(txIndex, peer.TxValidationCode_INVALID_WRITESET)
+				continue
+			}
+			b.Txs = append(b.Txs, &internal.Transaction{IndexInBlock: txIndex, ID: chdr.TxId, RWSet: txRWSet})
+		}
+	}
+	return b, txsStatInfo, nil
+}
+
+func preprocessProtoBlockUsingCache(txMgr txmgr.TxMgr,
+	validateKVFunc func(key string, value []byte) error,
+	block *common.Block, doMVCCValidation bool,
+) (*internal.Block, []*txmgr.TxStatInfo, error) {
+	b := &internal.Block{Num: block.Header.Number}
+	txsStatInfo := []*txmgr.TxStatInfo{}
+	// Committer validator has already set validation flags based on well formed tran checks
+	txsFilter := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+	for txIndex, _ := range block.Data.Data {
+
+		var env *common.Envelope
+		var chdr *common.ChannelHeader
+		var err error
+		txStatInfo := &txmgr.TxStatInfo{TxType: -1}
+		txsStatInfo = append(txsStatInfo, txStatInfo)
+
+		env = blockCache.BCache.TxsCache[txIndex].Env
+		chdr = blockCache.BCache.TxsCache[txIndex].Chdr
+
+		if txsFilter.IsInvalid(txIndex) {
+			// Skipping invalid transaction
+			logger.Warningf("Channel [%s]: Block [%d] Transaction index [%d] TxId [%s]"+
+				" marked as invalid by committer. Reason code [%s]",
+				chdr.GetChannelId(), block.Header.Number, txIndex, chdr.GetTxId(),
+				txsFilter.Flag(txIndex).String())
+			continue
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+
+		var txRWSet *rwsetutil.TxRwSet
+		txType := common.HeaderType(chdr.Type)
+		logger.Debugf("txType=%s", txType)
+		txStatInfo.TxType = txType
+		if txType == common.HeaderType_ENDORSER_TRANSACTION {
+
+			// extract actions from the envelope message
+			// --M1.4 区块中的txAction其实就是交易背书的内容
+			respPayload := blockCache.BCache.TxsCache[txIndex].RespPayload
+			txStatInfo.ChaincodeID = respPayload.ChaincodeId
+			txRWSet = blockCache.BCache.TxsCache[txIndex].Rwset
+
+		} else {
+			rwsetProto, err := processNonEndorserTx(env, chdr.TxId, txType, txMgr, !doMVCCValidation)
+			if _, ok := err.(*customtx.InvalidTxError); ok {
+				txsFilter.SetFlag(txIndex, peer.TxValidationCode_INVALID_OTHER_REASON)
+				continue
+			}
+			if err != nil {
+				return nil, nil, err
+			}
+			if rwsetProto != nil {
+				if txRWSet, err = rwsetutil.TxRwSetFromProtoMsg(rwsetProto); err != nil {
+					return nil, nil, err
+				}
+			}
+		}
+		if txRWSet != nil {
+			txStatInfo.NumCollections = txRWSet.NumCollections()
+
+			// --M1.4 这里的validateWriteset直接返回了nil，goleveldb没有对该函数进行处理
+
 			if err := validateWriteset(txRWSet, validateKVFunc); err != nil {
 				logger.Warningf("Channel [%s]: Block [%d] Transaction index [%d] TxId [%s]"+
 					" marked as invalid. Reason code [%s]",
