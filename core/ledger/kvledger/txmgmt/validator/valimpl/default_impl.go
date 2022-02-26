@@ -55,7 +55,7 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	startTime := time.Now()
 
 	if blockCache.BCache != nil {
-		if internalBlock, txsStatInfo, err = preprocessProtoBlock(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
+		if internalBlock, txsStatInfo, err = preprocessProtoBlockUsingCache(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
 			return nil, nil, err
 		}
 	} else {
@@ -63,6 +63,8 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 			return nil, nil, err
 		}
 	}
+
+	logger.Infof("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
 
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {
 		return nil, nil, err
@@ -80,7 +82,8 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 		txsStatInfo[i].ValidationCode = txsFilter.Flag(i)
 	}
 
-	logger.Infof("ValidateAndPrepareBatch finished in %dms", time.Since(startTime).Milliseconds())
+	// --M1.4 验证时间
+	logger.Infof("ValidateAndPrepareBatch validateAndPreparePvtBatch finished in %dms", time.Since(startTime).Milliseconds())
 
 	return &privacyenabledstate.UpdateBatch{
 		PubUpdates:  pubAndHashUpdates.PubUpdates,
