@@ -67,6 +67,7 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 
 	logger.Debugf("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
 
+	// --M1.4 ValidateAndPrepareBatch4ms
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {
 		return nil, nil, err
 	}
@@ -81,16 +82,10 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	postprocessProtoBlock(block, internalBlock)
 	logger.Debug("ValidateAndPrepareBatch() complete")
 
-	// --M1.4 验证时间
-	logger.Infof("ValidateAndPrepareBatch validateAndPreparePvtBatch finished in %dms", time.Since(startTime).Milliseconds())
-
 	txsFilter := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	for i := range txsFilter {
 		txsStatInfo[i].ValidationCode = txsFilter.Flag(i)
 	}
-
-	// --M1.4 验证时间
-	logger.Infof("ValidateAndPrepareBatch TxValidationFlags finished in %dms", time.Since(startTime).Milliseconds())
 
 	return &privacyenabledstate.UpdateBatch{
 		PubUpdates:  pubAndHashUpdates.PubUpdates,
