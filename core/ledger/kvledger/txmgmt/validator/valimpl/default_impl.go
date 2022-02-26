@@ -55,7 +55,7 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	startTime := time.Now()
 
 	if blockCache.BCache != nil {
-		if internalBlock, txsStatInfo, err = preprocessProtoBlockUsingCache(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
+		if internalBlock, txsStatInfo, err = preprocessProtoBlock(impl.txmgr, impl.db.ValidateKeyValue, block, doMVCCValidation); err != nil {
 			return nil, nil, err
 		}
 	} else {
