@@ -134,6 +134,10 @@ func (v *Validator) validateEndorserTX(
 
 	var validationCode = peer.TxValidationCode_VALID
 	var err error
+
+	// --M1.4 取消MVCC
+	doMVCCValidation = false
+
 	//mvccvalidation, may invalidate transaction
 	if doMVCCValidation {
 		validationCode, err = v.validateTx(txRWSet, updates)
