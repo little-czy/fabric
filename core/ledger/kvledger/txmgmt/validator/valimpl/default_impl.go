@@ -65,11 +65,14 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 		}
 	}
 
-	logger.Infof("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
+	logger.Debugf("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
 
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {
 		return nil, nil, err
 	}
+
+	logger.Infof("ValidateAndPrepareBatch doMVCCValidation finished in %dms", time.Since(startTime).Milliseconds())
+
 	logger.Debug("validating rwset...")
 	if pvtUpdates, err = validateAndPreparePvtBatch(internalBlock, impl.db, pubAndHashUpdates, blockAndPvtdata.PvtData); err != nil {
 		return nil, nil, err
@@ -78,13 +81,16 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 	postprocessProtoBlock(block, internalBlock)
 	logger.Debug("ValidateAndPrepareBatch() complete")
 
+	// --M1.4 验证时间
+	logger.Infof("ValidateAndPrepareBatch validateAndPreparePvtBatch finished in %dms", time.Since(startTime).Milliseconds())
+
 	txsFilter := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	for i := range txsFilter {
 		txsStatInfo[i].ValidationCode = txsFilter.Flag(i)
 	}
 
 	// --M1.4 验证时间
-	logger.Infof("ValidateAndPrepareBatch validateAndPreparePvtBatch finished in %dms", time.Since(startTime).Milliseconds())
+	logger.Infof("ValidateAndPrepareBatch TxValidationFlags finished in %dms", time.Since(startTime).Milliseconds())
 
 	return &privacyenabledstate.UpdateBatch{
 		PubUpdates:  pubAndHashUpdates.PubUpdates,
