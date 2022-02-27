@@ -135,7 +135,7 @@ func (v *Validator) validateEndorserTX(
 	var validationCode = peer.TxValidationCode_VALID
 	var err error
 
-	// --M1.4 取消MVCC
+	// --M1.4 取消MVCC ,MVCC用时3ms左右
 	// doMVCCValidation = false
 
 	//mvccvalidation, may invalidate transaction
@@ -151,6 +151,7 @@ func (v *Validator) validateTx(txRWSet *rwsetutil.TxRwSet, updates *internal.Pub
 	for _, nsRWSet := range txRWSet.NsRwSets {
 		ns := nsRWSet.NameSpace
 		// Validate public reads
+		// TODO 需要访问db
 		if valid, err := v.validateReadSet(ns, nsRWSet.KvRwSet.Reads, updates.PubUpdates); !valid || err != nil {
 			if err != nil {
 				return peer.TxValidationCode(-1), err
