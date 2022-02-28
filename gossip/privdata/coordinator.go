@@ -208,13 +208,15 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		return err
 	}
 
+	logger.Infof("--M1.4 computeOwnedRWsets finished in %dms", time.Since(startPvtRelated).Milliseconds())
+
 	privateInfo, err := c.listMissingPrivateData(block, ownedRWsets)
 	if err != nil {
 		logger.Warning(err)
 		return err
 	}
 
-	logger.Infof("--M1.4 computeOwnedRWsets finished in %dms", time.Since(startPvtRelated).Milliseconds())
+	logger.Infof("--M1.4 listMissingPrivateData finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// if the peer is configured to not pull private rwset of invalid
 	// transaction during block commit, we need to delete those
@@ -255,7 +257,7 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 	}
 	elapsedPull := int64(time.Since(startPull) / time.Millisecond) // duration in ms
 
-	logger.Infof("--M1.4 FetchDuration finished in %dms", time.Since(startPvtRelated).Milliseconds())
+	// logger.Infof("--M1.4 FetchDuration finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	c.reportFetchDuration(time.Since(startPull))
 
@@ -289,7 +291,7 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		blockAndPvtData.MissingPvtData.Add(missingRWS.seqInBlock, missingRWS.namespace, missingRWS.collection, false)
 	}
 
-	logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
+	// logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// commit block and private data
 	commitStart := time.Now()
