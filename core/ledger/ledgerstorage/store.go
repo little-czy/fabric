@@ -9,6 +9,7 @@ package ledgerstorage
 import (
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
@@ -112,13 +113,20 @@ func (s *Store) Init(btlPolicy pvtdatapolicy.BTLPolicy) {
 // CommitWithPvtData commits the block and the corresponding pvt data in an atomic operation
 func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error {
 	blockNum := blockAndPvtdata.Block.Header.Number
+
+	startGetLock := time.Now()
+
 	s.rwlock.Lock()
 	defer s.rwlock.Unlock()
+
+	logger.Infof("Get rwlock in %dms", time.Since(startGetLock).Milliseconds())
 
 	pvtBlkStoreHt, err := s.pvtdataStore.LastCommittedBlockHeight()
 	if err != nil {
 		return err
 	}
+
+	logger.Infof("Get LastCommittedBlockHeight in %dms", time.Since(startGetLock).Milliseconds())
 
 	writtenToPvtStore := false
 	if pvtBlkStoreHt < blockNum+1 { // The pvt data store sanity check does not allow rewriting the pvt data.
@@ -142,9 +150,13 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		logger.Debugf("Skipping writing block [%d] to pvt block store as the store height is [%d]", blockNum, pvtBlkStoreHt)
 	}
 
+	logger.Infof("Get constructPvtDataAndMissingData in %dms", time.Since(startGetLock).Milliseconds())
+
 	if err := s.AddBlock(blockAndPvtdata.Block); err != nil {
 		return err
 	}
+
+	logger.Infof("Get AddBlock in %dms", time.Since(startGetLock).Milliseconds())
 
 	if pvtBlkStoreHt == blockNum+1 {
 		// we reach here only when the pvtdataStore was ahead
@@ -152,6 +164,8 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		// occur after a peer rollback/reset).
 		s.isPvtstoreAheadOfBlockstore.Store(false)
 	}
+
+	logger.Infof("Get Pvtstore Store in %dms", time.Since(startGetLock).Milliseconds())
 
 	if writtenToPvtStore {
 		return s.pvtdataStore.Commit()

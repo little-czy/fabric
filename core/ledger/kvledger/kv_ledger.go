@@ -410,8 +410,8 @@ func (l *kvLedger) CommitWithPvtData(pvtdataAndBlock *ledger.BlockAndPvtData, co
 
 	l.blockAPIsRWLock.Lock()
 	defer l.blockAPIsRWLock.Unlock()
-
-	logger.Infof("Get lock in %d ms", time.Since(startGetLock).Milliseconds())
+	// getLock 0ms
+	logger.Debugf("Get lock in %d ms", time.Since(startGetLock).Milliseconds())
 
 	if err = l.blockStore.CommitWithPvtData(pvtdataAndBlock); err != nil {
 		return err
