@@ -287,14 +287,20 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 
 	logger.Debugf("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
 
+	startAppenFile := time.Now()
+
 	//append blockBytesEncodedLen to the file
+	// --M1.4 该过程比较快
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
-	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms", time.Since(startTime).Milliseconds())
+	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms, length:%d", time.Since(startAppenFile).Microseconds(), len(blockBytesEncodedLen))
 
 	if err == nil {
 		//append the actual block bytes to the file
+		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
+	logger.Infof("addBlock appendToFile blockBytes in %dms ,length:%d", time.Since(startTime).Microseconds(), blockBytesLen)
+
 	if err != nil {
 		truncateErr := mgr.currentFileWriter.truncateFile(mgr.cpInfo.latestFileChunksize)
 		if truncateErr != nil {
@@ -302,8 +308,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		}
 		return errors.WithMessage(err, "error appending block to file")
 	}
-
-	logger.Infof("addBlock appendToFile blockBytes in %dms", time.Since(startTime).Milliseconds())
 
 	//Update the checkpoint info with the results of adding the new block
 	currentCPInfo := mgr.cpInfo
