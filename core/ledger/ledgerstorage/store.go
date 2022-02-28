@@ -114,8 +114,6 @@ func (s *Store) Init(btlPolicy pvtdatapolicy.BTLPolicy) {
 func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error {
 	blockNum := blockAndPvtdata.Block.Header.Number
 
-	startGetLock := time.Now()
-
 	s.rwlock.Lock()
 	defer s.rwlock.Unlock()
 
@@ -146,11 +144,13 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		logger.Debugf("Skipping writing block [%d] to pvt block store as the store height is [%d]", blockNum, pvtBlkStoreHt)
 	}
 
+	startAddLock := time.Now()
+
 	if err := s.AddBlock(blockAndPvtdata.Block); err != nil {
 		return err
 	}
 
-	logger.Infof("Get AddBlock in %dms", time.Since(startGetLock).Milliseconds())
+	logger.Infof("time: AddBlock in %dms", time.Since(startAddLock).Milliseconds())
 
 	if pvtBlkStoreHt == blockNum+1 {
 		// we reach here only when the pvtdataStore was ahead
