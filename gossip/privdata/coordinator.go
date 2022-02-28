@@ -728,10 +728,15 @@ func (c *coordinator) listMissingPrivateData(block *common.Block, ownedRWsets ma
 		coordinator:          c,
 	}
 	storePvtDataOfInvalidTx := c.Support.CapabilityProvider.Capabilities().StorePvtDataOfInvalidTx()
+
+	startGetTxList := time.Now()
+
 	txList, err := data.forEachTxn(storePvtDataOfInvalidTx, txsFilter, bi.inspectTransaction)
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Infof("get startGetTxList in %dms", time.Since(startGetTxList).Milliseconds())
 
 	privateInfo := &privateDataInfo{
 		sources:                 sources,
