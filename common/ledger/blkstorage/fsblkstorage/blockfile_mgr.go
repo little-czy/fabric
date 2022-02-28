@@ -262,6 +262,8 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 			bcInfo.CurrentBlockHash, block.Header.PreviousHash,
 		)
 	}
+
+	// --M1.4 serializeBlock时间3ms
 	blockBytes, info, err := serializeBlock(block)
 	if err != nil {
 		return errors.WithMessage(err, "error serializing block")
@@ -284,6 +286,9 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		mgr.moveToNextFile()
 		currentOffset = 0
 	}
+
+	logger.Infof("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
+
 	//append blockBytesEncodedLen to the file
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
 	if err == nil {
