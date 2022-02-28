@@ -12,6 +12,7 @@ import (
 	"math"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/protobuf/proto"
@@ -238,6 +239,9 @@ func (mgr *blockfileMgr) moveToNextFile() {
 }
 
 func (mgr *blockfileMgr) addBlock(block *common.Block) error {
+
+	startTime := time.Now()
+
 	bcInfo := mgr.getBlockchainInfo()
 	if block.Header.Number != bcInfo.Height {
 		return errors.Errorf(
@@ -245,6 +249,8 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 			mgr.getBlockchainInfo().Height, block.Header.Number,
 		)
 	}
+
+	logger.Infof("addBlock getBlockchainInfo in %dms", time.Since(startTime).Microseconds())
 
 	// Add the previous hash check - Though, not essential but may not be a bad idea to
 	// verify the field `block.Header.PreviousHash` present in the block.
@@ -260,6 +266,9 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	if err != nil {
 		return errors.WithMessage(err, "error serializing block")
 	}
+
+	logger.Infof("addBlock serializeBlock in %dms", time.Since(startTime).Microseconds())
+
 	blockHash := block.Header.Hash()
 	//Get the location / offset where each transaction starts in the block and where the block ends
 	txOffsets := info.txOffsets
@@ -289,6 +298,8 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error appending block to file")
 	}
 
+	logger.Infof("addBlock appendToFile in %dms", time.Since(startTime).Microseconds())
+
 	//Update the checkpoint info with the results of adding the new block
 	currentCPInfo := mgr.cpInfo
 	newCPInfo := &checkpointInfo{
@@ -305,6 +316,8 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error saving current file info to db")
 	}
 
+	logger.Infof("addBlock saveCurrentInfo in %dms", time.Since(startTime).Microseconds())
+
 	//Index block file location pointer updated with file suffex and offset for the new block
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
 	blockFLP.offset = currentOffset
@@ -318,6 +331,8 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		flp: blockFLP, txOffsets: txOffsets, metadata: block.Metadata}); err != nil {
 		return err
 	}
+
+	logger.Infof("addBlock saveIndex in %dms", time.Since(startTime).Microseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)

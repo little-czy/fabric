@@ -53,9 +53,6 @@ func (store *fsBlockStore) AddBlock(block *common.Block) error {
 	startBlockCommit := time.Now()
 	result := store.fileMgr.addBlock(block)
 	elapsedBlockCommit := time.Since(startBlockCommit)
-
-	logger.Infof("elapsedBlockCommit in %dms", elapsedBlockCommit)
-
 	store.updateBlockStats(block.Header.Number, elapsedBlockCommit)
 
 	return result
