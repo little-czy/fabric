@@ -404,8 +404,6 @@ func (l *kvLedger) CommitWithPvtData(pvtdataAndBlock *ledger.BlockAndPvtData, co
 		l.addBlockCommitHash(pvtdataAndBlock.Block, updateBatchBytes)
 	}
 
-	logger.Infof("time: addBlockCommitHash in %dms", time.Since(startBlockstorageAndPvtdataCommit).Milliseconds())
-
 	logger.Debugf("[%s] Committing block [%d] to storage", l.ledgerID, blockNo)
 
 	startGetLock := time.Now()
@@ -418,8 +416,6 @@ func (l *kvLedger) CommitWithPvtData(pvtdataAndBlock *ledger.BlockAndPvtData, co
 	if err = l.blockStore.CommitWithPvtData(pvtdataAndBlock); err != nil {
 		return err
 	}
-	logger.Infof("time: CommitWithPvtData in %dms", time.Since(startBlockstorageAndPvtdataCommit).Milliseconds())
-
 	elapsedBlockstorageAndPvtdataCommit := time.Since(startBlockstorageAndPvtdataCommit)
 
 	startCommitState := time.Now()

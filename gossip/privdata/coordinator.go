@@ -313,6 +313,8 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 
 	c.reportPurgeDuration(time.Since(purgeStart))
 
+	logger.Infof("--M1.4 StoreBlock finished in %dms", time.Since(validationStart).Milliseconds())
+
 	return nil
 }
 
