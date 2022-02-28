@@ -405,11 +405,18 @@ func (l *kvLedger) CommitWithPvtData(pvtdataAndBlock *ledger.BlockAndPvtData, co
 	}
 
 	logger.Debugf("[%s] Committing block [%d] to storage", l.ledgerID, blockNo)
+
+	startGetLock := time.Now()
+
 	l.blockAPIsRWLock.Lock()
 	defer l.blockAPIsRWLock.Unlock()
+
+	logger.Infof("Get lock in %d ms", time.Since(startGetLock).Milliseconds())
+
 	if err = l.blockStore.CommitWithPvtData(pvtdataAndBlock); err != nil {
 		return err
 	}
+
 	elapsedBlockstorageAndPvtdataCommit := time.Since(startBlockstorageAndPvtdataCommit)
 
 	startCommitState := time.Now()
