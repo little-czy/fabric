@@ -418,6 +418,7 @@ func (l *kvLedger) CommitWithPvtData(pvtdataAndBlock *ledger.BlockAndPvtData, co
 	if err = l.blockStore.CommitWithPvtData(pvtdataAndBlock); err != nil {
 		return err
 	}
+	logger.Infof("time: CommitWithPvtData in %dms", time.Since(startBlockstorageAndPvtdataCommit).Milliseconds())
 
 	elapsedBlockstorageAndPvtdataCommit := time.Since(startBlockstorageAndPvtdataCommit)
 
