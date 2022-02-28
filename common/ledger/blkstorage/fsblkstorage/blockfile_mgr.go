@@ -290,13 +290,13 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	startAppendFile := time.Now()
 
 	//append blockBytesEncodedLen to the file
-	// --M1.4 该过程比较快
+	// --M1.4 该过程比较快 20us
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
 	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms, length:%d", time.Since(startAppendFile).Microseconds(), len(blockBytesEncodedLen))
 
 	if err == nil {
 		//append the actual block bytes to the file
-		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘
+		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘 500tx时1.5M一个块
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
 	logger.Infof("addBlock appendToFile blockBytes in %dms ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
@@ -326,8 +326,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error saving current file info to db")
 	}
 
-	logger.Debugf("addBlock saveCurrentInfo in %dms", time.Since(startTime).Milliseconds())
-
 	//Index block file location pointer updated with file suffex and offset for the new block
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
 	blockFLP.offset = currentOffset
@@ -336,8 +334,9 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		txOffset.loc.offset += len(blockBytesEncodedLen)
 	}
 
-	logger.Infof("addBlock shiftTheTxoffset in %dms", time.Since(startTime).Milliseconds())
+	startUpdateIndex := time.Now()
 
+	// --M1.4 save index过程用时15ms
 	//save the index in the database
 	if err = mgr.index.indexBlock(&blockIdxInfo{
 		blockNum: block.Header.Number, blockHash: blockHash,
@@ -345,7 +344,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return err
 	}
 
-	logger.Infof("addBlock saveIndex in %dms", time.Since(startTime).Milliseconds())
+	logger.Infof("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)
