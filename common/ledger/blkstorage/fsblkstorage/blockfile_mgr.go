@@ -287,19 +287,19 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 
 	logger.Debugf("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
 
-	startAppenFile := time.Now()
+	startAppendFile := time.Now()
 
 	//append blockBytesEncodedLen to the file
 	// --M1.4 该过程比较快
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
-	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms, length:%d", time.Since(startAppenFile).Microseconds(), len(blockBytesEncodedLen))
+	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms, length:%d", time.Since(startAppendFile).Microseconds(), len(blockBytesEncodedLen))
 
 	if err == nil {
 		//append the actual block bytes to the file
 		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
-	logger.Infof("addBlock appendToFile blockBytes in %dms ,length:%d", time.Since(startTime).Microseconds(), blockBytesLen)
+	logger.Infof("addBlock appendToFile blockBytes in %dms ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
 
 	if err != nil {
 		truncateErr := mgr.currentFileWriter.truncateFile(mgr.cpInfo.latestFileChunksize)
@@ -316,6 +316,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		latestFileChunksize:      currentCPInfo.latestFileChunksize + totalBytesToAppend,
 		isChainEmpty:             false,
 		lastBlockNumber:          block.Header.Number}
+
 	//save the checkpoint information in the database
 	if err = mgr.saveCurrentInfo(newCPInfo, false); err != nil {
 		truncateErr := mgr.currentFileWriter.truncateFile(currentCPInfo.latestFileChunksize)
@@ -325,7 +326,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error saving current file info to db")
 	}
 
-	logger.Infof("addBlock saveCurrentInfo in %dms", time.Since(startTime).Milliseconds())
+	logger.Debugf("addBlock saveCurrentInfo in %dms", time.Since(startTime).Milliseconds())
 
 	//Index block file location pointer updated with file suffex and offset for the new block
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
@@ -334,6 +335,9 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	for _, txOffset := range txOffsets {
 		txOffset.loc.offset += len(blockBytesEncodedLen)
 	}
+
+	logger.Infof("addBlock shiftTheTxoffset in %dms", time.Since(startTime).Milliseconds())
+
 	//save the index in the database
 	if err = mgr.index.indexBlock(&blockIdxInfo{
 		blockNum: block.Header.Number, blockHash: blockHash,
