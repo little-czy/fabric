@@ -65,7 +65,7 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 		}
 	}
 
-	logger.Debugf("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
+	logger.Infof("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
 
 	// --M1.4 ValidateAndPrepareBatch 4ms 次数进行MVCC时，进行了访数据库操作，查看db的版本号是否与读集的一致
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {
