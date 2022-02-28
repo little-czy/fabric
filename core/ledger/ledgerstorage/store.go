@@ -119,14 +119,10 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 	s.rwlock.Lock()
 	defer s.rwlock.Unlock()
 
-	logger.Infof("Get rwlock in %dms", time.Since(startGetLock).Milliseconds())
-
 	pvtBlkStoreHt, err := s.pvtdataStore.LastCommittedBlockHeight()
 	if err != nil {
 		return err
 	}
-
-	logger.Infof("Get LastCommittedBlockHeight in %dms", time.Since(startGetLock).Milliseconds())
 
 	writtenToPvtStore := false
 	if pvtBlkStoreHt < blockNum+1 { // The pvt data store sanity check does not allow rewriting the pvt data.
@@ -150,8 +146,6 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		logger.Debugf("Skipping writing block [%d] to pvt block store as the store height is [%d]", blockNum, pvtBlkStoreHt)
 	}
 
-	logger.Infof("Get constructPvtDataAndMissingData in %dms", time.Since(startGetLock).Milliseconds())
-
 	if err := s.AddBlock(blockAndPvtdata.Block); err != nil {
 		return err
 	}
@@ -164,8 +158,6 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		// occur after a peer rollback/reset).
 		s.isPvtstoreAheadOfBlockstore.Store(false)
 	}
-
-	logger.Infof("Get Pvtstore Store in %dms", time.Since(startGetLock).Milliseconds())
 
 	if writtenToPvtStore {
 		return s.pvtdataStore.Commit()
