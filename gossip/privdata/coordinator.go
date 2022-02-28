@@ -214,6 +214,8 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		return err
 	}
 
+	logger.Infof("--M1.4 computeOwnedRWsets finished in %dms", time.Since(startPvtRelated).Milliseconds())
+
 	// if the peer is configured to not pull private rwset of invalid
 	// transaction during block commit, we need to delete those
 	// missing entries from the missingKeys list (to be used for pulling rwset
@@ -252,6 +254,8 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		time.Sleep(pullRetrySleepInterval)
 	}
 	elapsedPull := int64(time.Since(startPull) / time.Millisecond) // duration in ms
+
+	logger.Infof("--M1.4 FetchDuration finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	c.reportFetchDuration(time.Since(startPull))
 
