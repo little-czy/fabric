@@ -250,7 +250,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		)
 	}
 
-	logger.Infof("addBlock getBlockchainInfo in %dms", time.Since(startTime).Microseconds())
+	logger.Infof("addBlock getBlockchainInfo in %dms", time.Since(startTime).Milliseconds())
 
 	// Add the previous hash check - Though, not essential but may not be a bad idea to
 	// verify the field `block.Header.PreviousHash` present in the block.
@@ -267,7 +267,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error serializing block")
 	}
 
-	logger.Infof("addBlock serializeBlock in %dms", time.Since(startTime).Microseconds())
+	logger.Infof("addBlock serializeBlock in %dms", time.Since(startTime).Milliseconds())
 
 	blockHash := block.Header.Hash()
 	//Get the location / offset where each transaction starts in the block and where the block ends
@@ -298,7 +298,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error appending block to file")
 	}
 
-	logger.Infof("addBlock appendToFile in %dms", time.Since(startTime).Microseconds())
+	logger.Infof("addBlock appendToFile in %dms", time.Since(startTime).Milliseconds())
 
 	//Update the checkpoint info with the results of adding the new block
 	currentCPInfo := mgr.cpInfo
@@ -316,7 +316,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error saving current file info to db")
 	}
 
-	logger.Infof("addBlock saveCurrentInfo in %dms", time.Since(startTime).Microseconds())
+	logger.Infof("addBlock saveCurrentInfo in %dms", time.Since(startTime).Milliseconds())
 
 	//Index block file location pointer updated with file suffex and offset for the new block
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
@@ -332,7 +332,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return err
 	}
 
-	logger.Infof("addBlock saveIndex in %dms", time.Since(startTime).Microseconds())
+	logger.Infof("addBlock saveIndex in %dms", time.Since(startTime).Milliseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)
