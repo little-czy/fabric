@@ -190,6 +190,8 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		MissingPvtData: make(ledger.TxMissingPvtDataMap),
 	}
 
+	startPvtRelated := time.Now()
+
 	exist, err := c.DoesPvtDataInfoExistInLedger(block.Header.Number)
 	if err != nil {
 		return err
@@ -282,6 +284,8 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 	for _, missingRWS := range privateInfo.missingRWSButIneligible {
 		blockAndPvtData.MissingPvtData.Add(missingRWS.seqInBlock, missingRWS.namespace, missingRWS.collection, false)
 	}
+
+	logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// commit block and private data
 	commitStart := time.Now()
