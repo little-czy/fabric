@@ -680,6 +680,93 @@ func (data blockData) forEachTxn(storePvtDataOfInvalidTx bool, txsFilter txValid
 	return txList, nil
 }
 
+func (data blockData) forEachTxnUsingCache(storePvtDataOfInvalidTx bool, txsFilter txValidationFlags, consumer blockConsumer) (txns, error) {
+	var txList []string
+	for seqInBlock, envBytes := range data {
+
+		var chdr *common.ChannelHeader
+		var payload *common.Payload
+		var err error
+
+		if blockCache.BCache.TxsCache[seqInBlock].Chdr == nil {
+			env, err := utils.GetEnvelopeFromBlock(envBytes)
+			if err != nil {
+				logger.Warning("Invalid envelope:", err)
+				continue
+			}
+
+			payload, err = utils.GetPayload(env)
+			if err != nil {
+				logger.Warning("Invalid payload:", err)
+				continue
+			}
+
+			chdr, err = utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
+			if err != nil {
+				logger.Warning("Invalid channel header:", err)
+				continue
+			}
+		} else {
+			payload = blockCache.BCache.TxsCache[seqInBlock].Payl
+			chdr = blockCache.BCache.TxsCache[seqInBlock].Chdr
+		}
+
+		if chdr.Type != int32(common.HeaderType_ENDORSER_TRANSACTION) {
+			continue
+		}
+
+		txList = append(txList, chdr.TxId)
+
+		if txsFilter[seqInBlock] != uint8(peer.TxValidationCode_VALID) && !storePvtDataOfInvalidTx {
+			logger.Debugf("Skipping Tx", seqInBlock, "because it's invalid. Status is", txsFilter[seqInBlock])
+			continue
+		}
+
+		var txRWSet *rwsetutil.TxRwSet
+		var ccActionPayload *peer.ChaincodeActionPayload
+
+		if blockCache.BCache.TxsCache[seqInBlock].Rwset == nil {
+			respPayload, err := utils.GetActionFromEnvelope(envBytes)
+			if err != nil {
+				logger.Warning("Failed obtaining action from envelope", err)
+				continue
+			}
+
+			tx, err := utils.GetTransaction(payload.Data)
+			if err != nil {
+				logger.Warning("Invalid transaction in payload data for tx ", chdr.TxId, ":", err)
+				continue
+			}
+
+			ccActionPayload, err = utils.GetChaincodeActionPayload(tx.Actions[0].Payload)
+			if err != nil {
+				logger.Warning("Invalid chaincode action in payload for tx", chdr.TxId, ":", err)
+				continue
+			}
+
+			if ccActionPayload.Action == nil {
+				logger.Warning("Action in ChaincodeActionPayload for", chdr.TxId, "is nil")
+				continue
+			}
+
+			txRWSet = &rwsetutil.TxRwSet{}
+			if err = txRWSet.FromProtoBytes(respPayload.Results); err != nil {
+				logger.Warning("Failed obtaining TxRwSet from ChaincodeAction's results", err)
+				continue
+			}
+		} else {
+			txRWSet = blockCache.BCache.TxsCache[seqInBlock].Rwset
+			ccActionPayload = blockCache.BCache.TxsCache[seqInBlock].CcPayload
+		}
+
+		err = consumer(uint64(seqInBlock), chdr, txRWSet, ccActionPayload.Action.Endorsements)
+		if err != nil {
+			return txList, err
+		}
+	}
+	return txList, nil
+}
+
 func endorsersFromOrgs(ns string, col string, endorsers []*peer.Endorsement, orgs []string) []*peer.Endorsement {
 	var res []*peer.Endorsement
 	for _, e := range endorsers {
@@ -731,7 +818,16 @@ func (c *coordinator) listMissingPrivateData(block *common.Block, ownedRWsets ma
 
 	startGetTxList := time.Now()
 
-	txList, err := data.forEachTxn(storePvtDataOfInvalidTx, txsFilter, bi.inspectTransaction)
+	var txList txns
+	var err error
+
+	// --M1.4 使用缓存
+	if blockCache.BCache != nil {
+		txList, err = data.forEachTxnUsingCache(storePvtDataOfInvalidTx, txsFilter, bi.inspectTransaction)
+	} else {
+		txList, err = data.forEachTxn(storePvtDataOfInvalidTx, txsFilter, bi.inspectTransaction)
+	}
+
 	if err != nil {
 		return nil, err
 	}
