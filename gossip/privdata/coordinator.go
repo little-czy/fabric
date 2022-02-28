@@ -208,15 +208,11 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		return err
 	}
 
-	logger.Infof("--M1.4 computeOwnedRWsets finished in %dms", time.Since(startPvtRelated).Milliseconds())
-
 	privateInfo, err := c.listMissingPrivateData(block, ownedRWsets)
 	if err != nil {
 		logger.Warning(err)
 		return err
 	}
-
-	logger.Infof("--M1.4 listMissingPrivateData finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// if the peer is configured to not pull private rwset of invalid
 	// transaction during block commit, we need to delete those
@@ -257,8 +253,6 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 	}
 	elapsedPull := int64(time.Since(startPull) / time.Millisecond) // duration in ms
 
-	// logger.Infof("--M1.4 FetchDuration finished in %dms", time.Since(startPvtRelated).Milliseconds())
-
 	c.reportFetchDuration(time.Since(startPull))
 
 	// Only log results if we actually attempted to fetch
@@ -291,7 +285,7 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		blockAndPvtData.MissingPvtData.Add(missingRWS.seqInBlock, missingRWS.namespace, missingRWS.collection, false)
 	}
 
-	// logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
+	logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// commit block and private data
 	commitStart := time.Now()
@@ -821,7 +815,7 @@ func (c *coordinator) listMissingPrivateData(block *common.Block, ownedRWsets ma
 	var txList txns
 	var err error
 
-	// --M1.4 使用缓存
+	// --M1.4 使用缓存 我们的任务场景中没有pvtdata，开销大多来自该环节的反序列化
 	if blockCache.BCache != nil {
 		txList, err = data.forEachTxnUsingCache(storePvtDataOfInvalidTx, txsFilter, bi.inspectTransaction)
 	} else {
@@ -832,7 +826,7 @@ func (c *coordinator) listMissingPrivateData(block *common.Block, ownedRWsets ma
 		return nil, err
 	}
 
-	logger.Infof("get startGetTxList in %dms", time.Since(startGetTxList).Milliseconds())
+	logger.Debugf("get startGetTxList in %dms", time.Since(startGetTxList).Milliseconds())
 
 	privateInfo := &privateDataInfo{
 		sources:                 sources,
