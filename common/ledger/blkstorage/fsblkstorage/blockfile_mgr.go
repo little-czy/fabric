@@ -250,8 +250,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		)
 	}
 
-	logger.Infof("addBlock getBlockchainInfo in %dms", time.Since(startTime).Milliseconds())
-
 	// Add the previous hash check - Though, not essential but may not be a bad idea to
 	// verify the field `block.Header.PreviousHash` present in the block.
 	// This check is a simple bytes comparison and hence does not cause any observable performance penalty
@@ -269,7 +267,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error serializing block")
 	}
 
-	logger.Infof("addBlock serializeBlock in %dms", time.Since(startTime).Milliseconds())
+	logger.Debugf("addBlock serializeBlock in %dms", time.Since(startTime).Milliseconds())
 
 	blockHash := block.Header.Hash()
 	//Get the location / offset where each transaction starts in the block and where the block ends
@@ -287,10 +285,12 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		currentOffset = 0
 	}
 
-	logger.Infof("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
+	logger.Debugf("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
 
 	//append blockBytesEncodedLen to the file
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
+	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms", time.Since(startTime).Milliseconds())
+
 	if err == nil {
 		//append the actual block bytes to the file
 		err = mgr.currentFileWriter.append(blockBytes, true)
@@ -303,7 +303,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error appending block to file")
 	}
 
-	logger.Infof("addBlock appendToFile in %dms", time.Since(startTime).Milliseconds())
+	logger.Infof("addBlock appendToFile blockBytes in %dms", time.Since(startTime).Milliseconds())
 
 	//Update the checkpoint info with the results of adding the new block
 	currentCPInfo := mgr.cpInfo
