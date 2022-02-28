@@ -292,7 +292,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	//append blockBytesEncodedLen to the file
 	// --M1.4 该过程比较快 20us
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
-	logger.Infof("addBlock appendToFile blockBytesEncodedLen in %dms, length:%d", time.Since(startAppendFile).Microseconds(), len(blockBytesEncodedLen))
 
 	if err == nil {
 		//append the actual block bytes to the file
