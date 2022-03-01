@@ -285,8 +285,6 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		blockAndPvtData.MissingPvtData.Add(missingRWS.seqInBlock, missingRWS.namespace, missingRWS.collection, false)
 	}
 
-	logger.Infof("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
-
 	// commit block and private data
 	commitStart := time.Now()
 	err = c.CommitWithPvtData(blockAndPvtData, &ledger.CommitOptions{})
@@ -316,8 +314,6 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 	}
 
 	c.reportPurgeDuration(time.Since(purgeStart))
-
-	logger.Infof("--M1.4 StoreBlock finished in %dms", time.Since(validationStart).Milliseconds())
 
 	return nil
 }

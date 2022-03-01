@@ -136,7 +136,7 @@ func (v *Validator) validateEndorserTX(
 	var err error
 
 	// --M1.4 取消MVCC ,MVCC用时3ms左右
-	// doMVCCValidation = false
+	doMVCCValidation = false
 
 	//mvccvalidation, may invalidate transaction
 	if doMVCCValidation {

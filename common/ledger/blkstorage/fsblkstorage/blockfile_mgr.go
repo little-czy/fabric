@@ -287,8 +287,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 
 	logger.Debugf("addBlock EncodeVarint in %dms", time.Since(startTime).Milliseconds())
 
-	startAppendFile := time.Now()
-
 	//append blockBytesEncodedLen to the file
 	// --M1.4 该过程比较快 20us
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
@@ -298,7 +296,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘 500tx时1.5M一个块
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
-	logger.Infof("addBlock appendToFile blockBytes in %dms ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
 
 	if err != nil {
 		truncateErr := mgr.currentFileWriter.truncateFile(mgr.cpInfo.latestFileChunksize)
@@ -333,8 +330,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		txOffset.loc.offset += len(blockBytesEncodedLen)
 	}
 
-	startUpdateIndex := time.Now()
-
 	// --M1.4 save index过程用时15ms
 	//save the index in the database
 	if err = mgr.index.indexBlock(&blockIdxInfo{
@@ -342,8 +337,6 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		flp: blockFLP, txOffsets: txOffsets, metadata: block.Metadata}); err != nil {
 		return err
 	}
-
-	logger.Infof("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)
