@@ -65,14 +65,20 @@ func (impl *DefaultImpl) ValidateAndPrepareBatch(blockAndPvtdata *ledger.BlockAn
 		}
 	}
 
-	logger.Debugf("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
+	if time.Since(startTime).Milliseconds() > 5 {
+		logger.Infof("ValidateAndPrepareBatch preprocessProtoBlock finished in %dms", time.Since(startTime).Milliseconds())
+	}
+
+	startMVCC := time.Now()
 
 	// --M1.4 ValidateAndPrepareBatch 4ms 次数进行MVCC时，进行了访数据库操作，查看db的版本号是否与读集的一致
 	if pubAndHashUpdates, err = impl.internalValidator.ValidateAndPrepareBatch(internalBlock, doMVCCValidation); err != nil {
 		return nil, nil, err
 	}
 
-	logger.Infof("ValidateAndPrepareBatch doMVCCValidation finished in %dms", time.Since(startTime).Milliseconds())
+	if time.Since(startMVCC).Milliseconds() > 5 {
+		logger.Infof("ValidateAndPrepareBatch doMVCCValidation finished in %dms", time.Since(startMVCC).Milliseconds())
+	}
 
 	logger.Debug("validating rwset...")
 	if pvtUpdates, err = validateAndPreparePvtBatch(internalBlock, impl.db, pubAndHashUpdates, blockAndPvtdata.PvtData); err != nil {
