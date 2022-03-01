@@ -94,6 +94,27 @@ func (h *DBHandle) WriteBatch(batch *UpdateBatch, sync bool) error {
 		}
 	}
 
+	if err := h.db.WriteBatch(levelBatch, sync); err != nil {
+		return err
+	}
+	return nil
+}
+
+// WriteBatch writes a batch in an atomic way
+func (h *DBHandle) WriteBatchWithLength(batch *UpdateBatch, sync bool) error {
+	if len(batch.KVs) == 0 {
+		return nil
+	}
+	levelBatch := &leveldb.Batch{}
+	for k, v := range batch.KVs {
+		key := constructLevelKey(h.dbName, []byte(k))
+		if v == nil {
+			levelBatch.Delete(key)
+		} else {
+			levelBatch.Put(key, v)
+		}
+	}
+
 	logger.Infof("--M1.4 getInternalLen :%d", levelBatch.GetInternalLen())
 
 	if err := h.db.WriteBatch(levelBatch, sync); err != nil {
