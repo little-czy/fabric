@@ -261,6 +261,7 @@ func (db *DB) writeLocked(batch, ourBatch *Batch, merge, sync bool) error {
 // It is safe to modify the contents of the arguments after Write returns but
 // not before. Write will not modify content of the batch.
 func (db *DB) Write(batch *Batch, wo *opt.WriteOptions) error {
+
 	if err := db.ok(); err != nil || batch == nil || batch.Len() == 0 {
 		return err
 	}

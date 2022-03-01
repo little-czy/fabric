@@ -72,6 +72,10 @@ type Batch struct {
 	internalLen int
 }
 
+func (b *Batch) GetInternalLen() (length int) {
+	return b.internalLen
+}
+
 func (b *Batch) grow(n int) {
 	o := len(b.data)
 	if cap(b.data)-o < n {
