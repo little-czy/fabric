@@ -6,8 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 package statebasedval
 
 import (
-	"time"
-
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
@@ -101,8 +99,6 @@ func (v *Validator) ValidateAndPrepareBatch(block *internal.Block, doMVCCValidat
 
 	updates := internal.NewPubAndHashUpdates()
 
-	startTime := time.Now()
-
 	for _, tx := range block.Txs {
 		var validationCode peer.TxValidationCode
 		var err error
@@ -120,9 +116,6 @@ func (v *Validator) ValidateAndPrepareBatch(block *internal.Block, doMVCCValidat
 				block.Num, tx.IndexInBlock, tx.ID, validationCode.String())
 		}
 	}
-
-	logger.Infof("ValidateAndPrepareBatch validateEndorserTX finished in %dms", time.Since(startTime).Milliseconds())
-
 	return updates, nil
 }
 
