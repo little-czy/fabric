@@ -117,16 +117,17 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 
 	//Index3 Used to find a transaction by it's transaction id
 	if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
-		if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
-			logger.Errorf("error detecting duplicate txids: %s", err)
-			return errors.WithMessage(err, "error detecting duplicate txids")
-		}
+		// if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
+		// 	logger.Errorf("error detecting duplicate txids: %s", err)
+		// 	return errors.WithMessage(err, "error detecting duplicate txids")
+		// }
 		for _, txoffset := range txOffsets {
-			if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
-				logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
-				continue
-			}
+			// if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
+			// 	logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
+			// 	continue
+			// }
 
+			// TODO : 像2.3一样结合起来存
 			txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
 			logger.Debugf("Adding txLoc [%s] for tx ID: [%s] to txid-index", txFlp, txoffset.txID)
 			txFlpBytes, marshalErr := txFlp.marshal()
@@ -172,7 +173,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 
 	batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
 	// Setting snyc to true as a precaution, false may be an ok optimization after further testing.
-	if err := index.db.WriteBatch(batch, true); err != nil {
+	if err := index.db.WriteBatchWithLength(batch, true); err != nil {
 		return err
 	}
 	return nil
