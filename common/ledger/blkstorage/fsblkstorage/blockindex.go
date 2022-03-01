@@ -97,7 +97,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 	}
 	logger.Debugf("Indexing block [%s]", blockIdxInfo)
 	flp := blockIdxInfo.flp
-	// txOffsets := blockIdxInfo.txOffsets
+	txOffsets := blockIdxInfo.txOffsets
 	// txsfltr := ledgerUtil.TxValidationFlags(blockIdxInfo.metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	batch := leveldbhelper.NewUpdateBatch()
 	flpBytes, err := flp.marshal()
@@ -115,40 +115,40 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		batch.Put(constructBlockNumKey(blockIdxInfo.blockNum), flpBytes)
 	}
 
-	// //Index3 Used to find a transaction by it's transaction id
-	// if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
-	// 	if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
-	// 		logger.Errorf("error detecting duplicate txids: %s", err)
-	// 		return errors.WithMessage(err, "error detecting duplicate txids")
-	// 	}
-	// 	for _, txoffset := range txOffsets {
-	// 		if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
-	// 			logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
-	// 			continue
-	// 		}
+	//Index3 Used to find a transaction by it's transaction id
+	if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
+		// if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
+		// 	logger.Errorf("error detecting duplicate txids: %s", err)
+		// 	return errors.WithMessage(err, "error detecting duplicate txids")
+		// }
+		for _, txoffset := range txOffsets {
+			if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
+				logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
+				continue
+			}
 
-	// 		txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
-	// 		logger.Debugf("Adding txLoc [%s] for tx ID: [%s] to txid-index", txFlp, txoffset.txID)
-	// 		txFlpBytes, marshalErr := txFlp.marshal()
-	// 		if marshalErr != nil {
-	// 			return marshalErr
-	// 		}
-	// 		batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
-	// 	}
-	// }
+			txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
+			logger.Debugf("Adding txLoc [%s] for tx ID: [%s] to txid-index", txFlp, txoffset.txID)
+			txFlpBytes, marshalErr := txFlp.marshal()
+			if marshalErr != nil {
+				return marshalErr
+			}
+			batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
+		}
+	}
 
-	// //Index4 - Store BlockNumTranNum will be used to query history data
-	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
-	// 	for txIterator, txoffset := range txOffsets {
-	// 		txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
-	// 		logger.Debugf("Adding txLoc [%s] for tx number:[%d] ID: [%s] to blockNumTranNum index", txFlp, txIterator, txoffset.txID)
-	// 		txFlpBytes, marshalErr := txFlp.marshal()
-	// 		if marshalErr != nil {
-	// 			return marshalErr
-	// 		}
-	// 		batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
-	// 	}
-	// }
+	//Index4 - Store BlockNumTranNum will be used to query history data
+	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
+		for txIterator, txoffset := range txOffsets {
+			txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
+			logger.Debugf("Adding txLoc [%s] for tx number:[%d] ID: [%s] to blockNumTranNum index", txFlp, txIterator, txoffset.txID)
+			txFlpBytes, marshalErr := txFlp.marshal()
+			if marshalErr != nil {
+				return marshalErr
+			}
+			batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
+		}
+	}
 
 	// // Index5 - Store BlockNumber will be used to find block by transaction id
 	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockTxID) {
@@ -170,7 +170,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 	// 	}
 	// }
 
-	// batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
+	batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
 	// Setting snyc to true as a precaution, false may be an ok optimization after further testing.
 	if err := index.db.WriteBatch(batch, true); err != nil {
 		return err
