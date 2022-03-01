@@ -190,8 +190,6 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		MissingPvtData: make(ledger.TxMissingPvtDataMap),
 	}
 
-	startPvtRelated := time.Now()
-
 	exist, err := c.DoesPvtDataInfoExistInLedger(block.Header.Number)
 	if err != nil {
 		return err
