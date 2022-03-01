@@ -100,28 +100,28 @@ func (h *DBHandle) WriteBatch(batch *UpdateBatch, sync bool) error {
 	return nil
 }
 
-// WriteBatch writes a batch in an atomic way
-func (h *DBHandle) WriteBatchWithLength(batch *UpdateBatch, sync bool) error {
-	if len(batch.KVs) == 0 {
-		return nil
-	}
-	levelBatch := &leveldb.Batch{}
-	for k, v := range batch.KVs {
-		key := constructLevelKey(h.dbName, []byte(k))
-		if v == nil {
-			levelBatch.Delete(key)
-		} else {
-			levelBatch.Put(key, v)
-		}
-	}
+// // WriteBatch writes a batch in an atomic way
+// func (h *DBHandle) WriteBatchWithLength(batch *UpdateBatch, sync bool) error {
+// 	if len(batch.KVs) == 0 {
+// 		return nil
+// 	}
+// 	levelBatch := &leveldb.Batch{}
+// 	for k, v := range batch.KVs {
+// 		key := constructLevelKey(h.dbName, []byte(k))
+// 		if v == nil {
+// 			levelBatch.Delete(key)
+// 		} else {
+// 			levelBatch.Put(key, v)
+// 		}
+// 	}
 
-	logger.Infof("--M1.4 getInternalLen :%d", levelBatch.GetInternalLen())
+// 	logger.Infof("--M1.4 getInternalLen :%d", levelBatch.GetInternalLen())
 
-	if err := h.db.WriteBatch(levelBatch, sync); err != nil {
-		return err
-	}
-	return nil
-}
+// 	if err := h.db.WriteBatch(levelBatch, sync); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 // GetIterator gets an handle to iterator. The iterator should be released after the use.
 // The resultset contains all the keys that are present in the db between the startKey (inclusive) and the endKey (exclusive).
