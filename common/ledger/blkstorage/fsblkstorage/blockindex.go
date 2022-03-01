@@ -14,7 +14,8 @@ import (
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
 	"github.com/hyperledger/fabric/common/ledger/util"
 	"github.com/hyperledger/fabric/common/ledger/util/leveldbhelper"
-	ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
+
+	// ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -96,82 +97,82 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 	}
 	logger.Debugf("Indexing block [%s]", blockIdxInfo)
 	flp := blockIdxInfo.flp
-	txOffsets := blockIdxInfo.txOffsets
-	txsfltr := ledgerUtil.TxValidationFlags(blockIdxInfo.metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+	// txOffsets := blockIdxInfo.txOffsets
+	// txsfltr := ledgerUtil.TxValidationFlags(blockIdxInfo.metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	batch := leveldbhelper.NewUpdateBatch()
 	flpBytes, err := flp.marshal()
 	if err != nil {
 		return err
 	}
 
-	// Index1
-	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
-		batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
-	}
+	// // Index1
+	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
+	// 	batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
+	// }
 
 	//Index2
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNum) {
 		batch.Put(constructBlockNumKey(blockIdxInfo.blockNum), flpBytes)
 	}
 
-	//Index3 Used to find a transaction by it's transaction id
-	if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
-		if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
-			logger.Errorf("error detecting duplicate txids: %s", err)
-			return errors.WithMessage(err, "error detecting duplicate txids")
-		}
-		for _, txoffset := range txOffsets {
-			if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
-				logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
-				continue
-			}
+	// //Index3 Used to find a transaction by it's transaction id
+	// if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
+	// 	if err = index.markDuplicateTxids(blockIdxInfo); err != nil {
+	// 		logger.Errorf("error detecting duplicate txids: %s", err)
+	// 		return errors.WithMessage(err, "error detecting duplicate txids")
+	// 	}
+	// 	for _, txoffset := range txOffsets {
+	// 		if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
+	// 			logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
+	// 			continue
+	// 		}
 
-			txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
-			logger.Debugf("Adding txLoc [%s] for tx ID: [%s] to txid-index", txFlp, txoffset.txID)
-			txFlpBytes, marshalErr := txFlp.marshal()
-			if marshalErr != nil {
-				return marshalErr
-			}
-			batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
-		}
-	}
+	// 		txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
+	// 		logger.Debugf("Adding txLoc [%s] for tx ID: [%s] to txid-index", txFlp, txoffset.txID)
+	// 		txFlpBytes, marshalErr := txFlp.marshal()
+	// 		if marshalErr != nil {
+	// 			return marshalErr
+	// 		}
+	// 		batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
+	// 	}
+	// }
 
-	//Index4 - Store BlockNumTranNum will be used to query history data
-	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
-		for txIterator, txoffset := range txOffsets {
-			txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
-			logger.Debugf("Adding txLoc [%s] for tx number:[%d] ID: [%s] to blockNumTranNum index", txFlp, txIterator, txoffset.txID)
-			txFlpBytes, marshalErr := txFlp.marshal()
-			if marshalErr != nil {
-				return marshalErr
-			}
-			batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
-		}
-	}
+	// //Index4 - Store BlockNumTranNum will be used to query history data
+	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
+	// 	for txIterator, txoffset := range txOffsets {
+	// 		txFlp := newFileLocationPointer(flp.fileSuffixNum, flp.offset, txoffset.loc)
+	// 		logger.Debugf("Adding txLoc [%s] for tx number:[%d] ID: [%s] to blockNumTranNum index", txFlp, txIterator, txoffset.txID)
+	// 		txFlpBytes, marshalErr := txFlp.marshal()
+	// 		if marshalErr != nil {
+	// 			return marshalErr
+	// 		}
+	// 		batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
+	// 	}
+	// }
 
-	// Index5 - Store BlockNumber will be used to find block by transaction id
-	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockTxID) {
-		for _, txoffset := range txOffsets {
-			if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
-				continue
-			}
-			batch.Put(constructBlockTxIDKey(txoffset.txID), flpBytes)
-		}
-	}
+	// // Index5 - Store BlockNumber will be used to find block by transaction id
+	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockTxID) {
+	// 	for _, txoffset := range txOffsets {
+	// 		if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
+	// 			continue
+	// 		}
+	// 		batch.Put(constructBlockTxIDKey(txoffset.txID), flpBytes)
+	// 	}
+	// }
 
-	// Index6 - Store transaction validation result by transaction id
-	if index.isAttributeIndexed(blkstorage.IndexableAttrTxValidationCode) {
-		for idx, txoffset := range txOffsets {
-			if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
-				continue
-			}
-			batch.Put(constructTxValidationCodeIDKey(txoffset.txID), []byte{byte(txsfltr.Flag(idx))})
-		}
-	}
+	// // Index6 - Store transaction validation result by transaction id
+	// if index.isAttributeIndexed(blkstorage.IndexableAttrTxValidationCode) {
+	// 	for idx, txoffset := range txOffsets {
+	// 		if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
+	// 			continue
+	// 		}
+	// 		batch.Put(constructTxValidationCodeIDKey(txoffset.txID), []byte{byte(txsfltr.Flag(idx))})
+	// 	}
+	// }
 
-	batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
+	// batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
 	// Setting snyc to true as a precaution, false may be an ok optimization after further testing.
-	if err := index.db.WriteBatchWithLength(batch, true); err != nil {
+	if err := index.db.WriteBatch(batch, true); err != nil {
 		return err
 	}
 	return nil
