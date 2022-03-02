@@ -121,7 +121,7 @@ func (v *Validator) ValidateAndPrepareBatch(block *internal.Block, doMVCCValidat
 		}
 	}
 
-	logger.Infof("ValidateAndPrepareBatch validateEndorserTX finished in %dms", time.Since(startTime).Milliseconds())
+	logger.Debugf("ValidateAndPrepareBatch validateEndorserTX finished in %dms", time.Since(startTime).Milliseconds())
 
 	return updates, nil
 }

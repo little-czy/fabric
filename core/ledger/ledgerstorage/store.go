@@ -150,7 +150,7 @@ func (s *Store) CommitWithPvtData(blockAndPvtdata *ledger.BlockAndPvtData) error
 		return err
 	}
 
-	logger.Infof("time: AddBlock in %dms", time.Since(startAddLock).Milliseconds())
+	logger.Debugf("time: AddBlock in %dms", time.Since(startAddLock).Milliseconds())
 
 	if pvtBlkStoreHt == blockNum+1 {
 		// we reach here only when the pvtdataStore was ahead

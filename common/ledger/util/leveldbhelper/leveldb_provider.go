@@ -115,7 +115,7 @@ func (h *DBHandle) WriteBatchWithLength(batch *UpdateBatch, sync bool) error {
 		}
 	}
 
-	logger.Infof("--M1.4 getInternalLen :%d ,index num: %d", levelBatch.GetInternalLen(), levelBatch.Len())
+	logger.Debugf("--M1.4 getInternalLen :%d ,index num: %d", levelBatch.GetInternalLen(), levelBatch.Len())
 
 	if err := h.db.WriteBatch(levelBatch, sync); err != nil {
 		return err
