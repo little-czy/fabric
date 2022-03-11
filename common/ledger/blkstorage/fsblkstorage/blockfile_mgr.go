@@ -343,7 +343,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return err
 	}
 
-	logger.Debugf("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
+	logger.Infof("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)
