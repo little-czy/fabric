@@ -393,7 +393,7 @@ type TxIDIndexValue struct {
 	TxValidationCode int32
 }
 
-// TODO 序列化要存储的结构体
+// TODO 使用protobuf序列化
 func (txVal *TxIDIndexValue) marshal() ([]byte, error) {
 	buffer := proto.NewBuffer([]byte{})
 	// append(buffer., txVal.BlkLocation)
@@ -407,6 +407,12 @@ func (txVal *TxIDIndexValue) marshal() ([]byte, error) {
 	}
 
 	return buffer.Bytes(), nil
+}
+
+// TODO 反序列化要存储的结构体
+func (txVal *TxIDIndexValue) unmarshal(b []byte) error {
+
+	return nil
 }
 
 func (flp *fileLocPointer) marshal() ([]byte, error) {
