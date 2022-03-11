@@ -15,7 +15,7 @@ import (
 	"github.com/hyperledger/fabric/common/ledger/util"
 	"github.com/hyperledger/fabric/common/ledger/util/leveldbhelper"
 
-	// ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
+	ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -98,22 +98,24 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 	logger.Debugf("Indexing block [%s]", blockIdxInfo)
 	flp := blockIdxInfo.flp
 	txOffsets := blockIdxInfo.txOffsets
-	// txsfltr := ledgerUtil.TxValidationFlags(blockIdxInfo.metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+	txsfltr := ledgerUtil.TxValidationFlags(blockIdxInfo.metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	batch := leveldbhelper.NewUpdateBatch()
 	flpBytes, err := flp.marshal()
 	if err != nil {
 		return err
 	}
 
-	// // Index1
-	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
-	// 	batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
-	// }
+	// Index1
+	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
+		batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
+	}
 
 	//Index2
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNum) {
 		batch.Put(constructBlockNumKey(blockIdxInfo.blockNum), flpBytes)
 	}
+
+	// TODO: INdexBlock的key压缩到一起之后，如何进行解析需要进一步进行实现
 
 	//Index3 Used to find a transaction by it's transaction id
 	if index.isAttributeIndexed(blkstorage.IndexableAttrTxID) {
@@ -121,7 +123,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		// 	logger.Errorf("error detecting duplicate txids: %s", err)
 		// 	return errors.WithMessage(err, "error detecting duplicate txids")
 		// }
-		for _, txoffset := range txOffsets {
+		for i, txoffset := range txOffsets {
 			// if txoffset.isDuplicate { // do not overwrite txid entry in the index - FAB-8557
 			// 	logger.Debugf("txid [%s] is a duplicate of a previous tx. Not indexing in txid-index", txoffset.txID)
 			// 	continue
@@ -134,7 +136,26 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 			if marshalErr != nil {
 				return marshalErr
 			}
-			batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
+
+			indexVal := &TxIDIndexValue{
+				BlkLocation:      flpBytes,
+				TxLocation:       txFlpBytes,
+				TxValidationCode: int32(txsfltr.Flag(i)),
+			}
+
+			// --M1.4 合并多次index的value
+			indexValBytes, marshalErr := indexVal.marshal()
+			if marshalErr != nil {
+				return marshalErr
+			}
+
+			// logger.Infof("%v", indexValBytes)
+
+			//--M1.4 新增一个数据结构，封装需要存储的三个value
+			// TODO: 合并之后的索引用法需要改变
+
+			// batch.Put(constructTxIDKey(txoffset.txID), txFlpBytes)
+			batch.Put(constructTxIDKey(txoffset.txID), indexValBytes)
 		}
 	}
 
@@ -364,6 +385,28 @@ func newFileLocationPointer(fileSuffixNum int, beginningOffset int, relativeLP *
 	flp.offset = beginningOffset + relativeLP.offset
 	flp.bytesLength = relativeLP.bytesLength
 	return flp
+}
+
+type TxIDIndexValue struct {
+	BlkLocation      []byte
+	TxLocation       []byte
+	TxValidationCode int32
+}
+
+// TODO 序列化要存储的结构体
+func (txVal *TxIDIndexValue) marshal() ([]byte, error) {
+	buffer := proto.NewBuffer([]byte{})
+	// append(buffer., txVal.BlkLocation)
+
+	buffer.AppendBuf(txVal.BlkLocation)
+	buffer.AppendBuf(txVal.TxLocation)
+
+	e := buffer.EncodeVarint(uint64(txVal.TxValidationCode))
+	if e != nil {
+		return nil, e
+	}
+
+	return buffer.Bytes(), nil
 }
 
 func (flp *fileLocPointer) marshal() ([]byte, error) {
