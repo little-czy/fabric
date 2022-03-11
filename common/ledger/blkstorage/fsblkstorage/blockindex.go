@@ -9,6 +9,7 @@ package fsblkstorage
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
@@ -105,6 +106,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		return err
 	}
 
+	startIndexUpadate := time.Now()
+
 	// Index1
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
 		batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
@@ -159,6 +162,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		}
 	}
 
+	logger.Infof("IndexBlock Update Index 1-3 finished in %dms", time.Since(startIndexUpadate).Milliseconds())
+
 	//Index4 - Store BlockNumTranNum will be used to query history data
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
 		for txIterator, txoffset := range txOffsets {
@@ -171,6 +176,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 			batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
 		}
 	}
+
+	logger.Infof("IndexBlock Update Index 4 finished in %dms", time.Since(startIndexUpadate).Milliseconds())
 
 	// // Index5 - Store BlockNumber will be used to find block by transaction id
 	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockTxID) {
