@@ -283,7 +283,7 @@ func (c *coordinator) StoreBlock(block *common.Block, privateDataSets util.PvtDa
 		blockAndPvtData.MissingPvtData.Add(missingRWS.seqInBlock, missingRWS.namespace, missingRWS.collection, false)
 	}
 
-	logger.Debugf("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
+	// logger.Debugf("--M1.4 pvtRelated finished in %dms", time.Since(startPvtRelated).Milliseconds())
 
 	// commit block and private data
 	commitStart := time.Now()
