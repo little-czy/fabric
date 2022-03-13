@@ -9,7 +9,6 @@ package fsblkstorage
 import (
 	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
@@ -91,15 +90,15 @@ func (index *blockIndex) getLastBlockIndexed() (uint64, error) {
 }
 
 func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
-	// my timstamp
-	myTimeStart := time.Now()
-	var myTimePrepare time.Time
-	var myTimeIndex1 time.Time
-	var myTimeIndex2 time.Time
-	var myTimeIndex3 time.Time
-	var myTimeIndex4 time.Time
-	var myTimeIndex5 time.Time
-	var myTimeIndex6 time.Time
+	// // my timstamp
+	// myTimeStart := time.Now()
+	// var myTimePrepare time.Time
+	// var myTimeIndex1 time.Time
+	// var myTimeIndex2 time.Time
+	// var myTimeIndex3 time.Time
+	// var myTimeIndex4 time.Time
+	// var myTimeIndex5 time.Time
+	// var myTimeIndex6 time.Time
 
 	// do not index anything
 	if len(index.indexItemsMap) == 0 {
@@ -116,19 +115,19 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		return err
 	}
 
-	myTimePrepare = time.Now()
+	// myTimePrepare = time.Now()
 
 	// Index1
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
 		batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)
 	}
-	myTimeIndex1 = time.Now()
+	// myTimeIndex1 = time.Now()
 
 	//Index2
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNum) {
 		batch.Put(constructBlockNumKey(blockIdxInfo.blockNum), flpBytes)
 	}
-	myTimeIndex2 = time.Now()
+	// myTimeIndex2 = time.Now()
 
 	// TODO: INdexBlock的key压缩到一起之后，如何进行解析需要进一步进行实现
 
@@ -173,7 +172,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 			batch.Put(constructTxIDKey(txoffset.txID), indexValBytes)
 		}
 	}
-	myTimeIndex3 = time.Now()
+	// myTimeIndex3 = time.Now()
 
 	//Index4 - Store BlockNumTranNum will be used to query history data
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockNumTranNum) {
@@ -187,7 +186,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 			batch.Put(constructBlockNumTranNumKey(blockIdxInfo.blockNum, uint64(txIterator)), txFlpBytes)
 		}
 	}
-	myTimeIndex4 = time.Now()
+	// myTimeIndex4 = time.Now()
 
 	// // Index5 - Store BlockNumber will be used to find block by transaction id
 	// if index.isAttributeIndexed(blkstorage.IndexableAttrBlockTxID) {
@@ -208,8 +207,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 	// 		batch.Put(constructTxValidationCodeIDKey(txoffset.txID), []byte{byte(txsfltr.Flag(idx))})
 	// 	}
 	// }
-	myTimeIndex5 = time.Now()
-	myTimeIndex6 = time.Now()
+	// myTimeIndex5 = time.Now()
+	// myTimeIndex6 = time.Now()
 
 	batch.Put(indexCheckpointKey, encodeBlockNum(blockIdxInfo.blockNum))
 	// Setting snyc to true as a precaution, false may be an ok optimization after further testing.
@@ -217,16 +216,16 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		return err
 	}
 
-	logger.Infof("my logs block ID [%d] -> cost: %dμs, Perpare: %dμs, Index1: %dμs, Index2: %dμs, Index3: %dμs, Index4: %dμs, Index5: %dμs, Index6: %dμs, WriteBatch: %dμs",
-		blockIdxInfo.blockNum, time.Since(myTimeStart).Microseconds(),
-		myTimePrepare.Sub(myTimeStart).Microseconds(),
-		myTimeIndex1.Sub(myTimePrepare).Microseconds(),
-		myTimeIndex2.Sub(myTimeIndex1).Microseconds(),
-		myTimeIndex3.Sub(myTimeIndex2).Microseconds(),
-		myTimeIndex4.Sub(myTimeIndex3).Microseconds(),
-		myTimeIndex5.Sub(myTimeIndex4).Microseconds(),
-		myTimeIndex6.Sub(myTimeIndex5).Microseconds(),
-		time.Since(myTimeIndex6).Microseconds())
+	// logger.Infof("my logs block ID [%d] -> cost: %dμs, Perpare: %dμs, Index1: %dμs, Index2: %dμs, Index3: %dμs, Index4: %dμs, Index5: %dμs, Index6: %dμs, WriteBatch: %dμs",
+	// 	blockIdxInfo.blockNum, time.Since(myTimeStart).Microseconds(),
+	// 	myTimePrepare.Sub(myTimeStart).Microseconds(),
+	// 	myTimeIndex1.Sub(myTimePrepare).Microseconds(),
+	// 	myTimeIndex2.Sub(myTimeIndex1).Microseconds(),
+	// 	myTimeIndex3.Sub(myTimeIndex2).Microseconds(),
+	// 	myTimeIndex4.Sub(myTimeIndex3).Microseconds(),
+	// 	myTimeIndex5.Sub(myTimeIndex4).Microseconds(),
+	// 	myTimeIndex6.Sub(myTimeIndex5).Microseconds(),
+	// 	time.Since(myTimeIndex6).Microseconds())
 
 	return nil
 }
