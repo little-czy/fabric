@@ -379,6 +379,10 @@ func NewBuffer(e []byte) *Buffer {
 	return &Buffer{buf: e}
 }
 
+func (p *Buffer) AppendBuf(b []byte) {
+	p.buf = append(p.buf, b...)
+}
+
 // Reset resets the Buffer, ready for marshaling a new protocol buffer.
 func (p *Buffer) Reset() {
 	p.buf = p.buf[0:0] // for reading/writing

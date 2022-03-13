@@ -1,0 +1,13 @@
+
+syntax = "proto3";
+
+option go_package = "github.com/hyperledger/fabric/common/ledger/fsblkstorage";
+
+package msgs;
+
+
+message txIDIndexValue {
+    bytes blk_location = 1;
+    bytes tx_location = 2;
+    int32 tx_validation_code = 3;
+}
