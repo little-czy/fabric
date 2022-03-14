@@ -145,6 +145,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 				TxValidationCode: int32(txsfltr.Flag(i)),
 			}
 
+			logger.Infof("indexBlock: protobuf marshal indexValBytes")
+
 			indexValBytes, err := proto.Marshal(indexVal)
 			if err != nil {
 				return errors.Wrap(err, "unexpected error while marshaling TxIDIndexValProto message")
