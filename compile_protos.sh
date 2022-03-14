@@ -42,6 +42,6 @@ for dir in $ROOTLESS_PROTO_DIRS $PROTO_ROOT_DIRS; do
 echo Working on dir $dir
         # As this is a proto root, and there may be subdirectories with protos, compile the protos for each sub-directory which contains them
 	for protos in $(find "$dir" -name '*.proto' -exec dirname {} \; | sort | uniq) ; do
-	       protoc --proto_path="$dir" --go_out=plugins=grpc:$GOPATH/src "$protos"/*.proto
+	       protoc --proto_path="$dir" --go_out="$protos"/ "$protos"/*.proto
 	done
 done
