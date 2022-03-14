@@ -14,7 +14,9 @@ set -eux
 
 # Find explicit proto roots
 PROTO_ROOT_FILES="$(find . -name ".protoroot" -exec readlink -f {} \;)"
-PROTO_ROOT_DIRS="$(dirname $PROTO_ROOT_FILES)"
+# PROTO_ROOT_DIRS="$(dirname $PROTO_ROOT_FILES)"
+PROTO_ROOT_DIRS=$PROTO_ROOT_FILES
+
 
 echo $PROTO_ROOT_DIRS
 
@@ -26,6 +28,15 @@ ROOTLESS_PROTO_FILES="$(find $PWD \
                              -path $PWD/core/chaincode/shim/java -prune -o \
                              -name "*.proto" -exec readlink -f {} \;)"
 ROOTLESS_PROTO_DIRS="$(dirname $ROOTLESS_PROTO_FILES | sort | uniq)"
+
+# # Find all proto files to be compiled, excluding any which are in a proto root or in the vendor folder
+# ROOTLESS_PROTO_FILES="$(find $PWD \
+#                              $(for dir in $PROTO_ROOT_DIRS ; do echo "-path $dir -prune -o " ; done) \
+#                              -path $PWD/vendor -prune -o \
+#                              -path $PWD/.build -prune -o \
+#                              -path $PWD/core/chaincode/shim/java -prune -o \
+#                              -name "*.proto" -exec readlink -f {} \;)"
+# ROOTLESS_PROTO_DIRS="$(dirname $ROOTLESS_PROTO_FILES | sort | uniq)"
 
 # for dir in $ROOTLESS_PROTO_DIRS $PROTO_ROOT_DIRS; do
 # echo Working on dir $dir
