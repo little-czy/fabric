@@ -14,10 +14,12 @@ import (
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
 	"github.com/hyperledger/fabric/common/ledger/util"
 	"github.com/hyperledger/fabric/common/ledger/util/leveldbhelper"
+	"github.com/hyperledger/fabric/protos/ledger/blockindex"
 
 	ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/peer"
+
 	"github.com/pkg/errors"
 )
 
@@ -137,17 +139,22 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 				return marshalErr
 			}
 
-			indexVal := &TxIDIndexValue{
+			indexVal := &blockindex.TxIDIndexValue{
 				BlkLocation:      flpBytes,
 				TxLocation:       txFlpBytes,
 				TxValidationCode: int32(txsfltr.Flag(i)),
 			}
 
-			// --M1.4 合并多次index的value
-			indexValBytes, marshalErr := indexVal.marshal()
-			if marshalErr != nil {
-				return marshalErr
+			indexValBytes, err := proto.Marshal(indexVal)
+			if err != nil {
+				return errors.Wrap(err, "unexpected error while marshaling TxIDIndexValProto message")
 			}
+
+			// // --M1.4 合并多次index的value
+			// indexValBytes, marshalErr := indexVal.marshal()
+			// if marshalErr != nil {
+			// 	return marshalErr
+			// }
 
 			// logger.Infof("%v", indexValBytes)
 
@@ -387,33 +394,33 @@ func newFileLocationPointer(fileSuffixNum int, beginningOffset int, relativeLP *
 	return flp
 }
 
-type TxIDIndexValue struct {
-	BlkLocation      []byte
-	TxLocation       []byte
-	TxValidationCode int32
-}
+// type TxIDIndexValue struct {
+// 	BlkLocation      []byte
+// 	TxLocation       []byte
+// 	TxValidationCode int32
+// }
 
-// TODO 使用protobuf序列化
-func (txVal *TxIDIndexValue) marshal() ([]byte, error) {
-	buffer := proto.NewBuffer([]byte{})
-	// append(buffer., txVal.BlkLocation)
+// // TODO 使用protobuf序列化
+// func (txVal *TxIDIndexValue) marshal() ([]byte, error) {
+// 	buffer := proto.NewBuffer([]byte{})
+// 	// append(buffer., txVal.BlkLocation)
 
-	buffer.AppendBuf(txVal.BlkLocation)
-	buffer.AppendBuf(txVal.TxLocation)
+// 	buffer.AppendBuf(txVal.BlkLocation)
+// 	buffer.AppendBuf(txVal.TxLocation)
 
-	e := buffer.EncodeVarint(uint64(txVal.TxValidationCode))
-	if e != nil {
-		return nil, e
-	}
+// 	e := buffer.EncodeVarint(uint64(txVal.TxValidationCode))
+// 	if e != nil {
+// 		return nil, e
+// 	}
 
-	return buffer.Bytes(), nil
-}
+// 	return buffer.Bytes(), nil
+// }
 
-// TODO 反序列化要存储的结构体
-func (txVal *TxIDIndexValue) unmarshal(b []byte) error {
+// // TODO 反序列化要存储的结构体
+// func (txVal *TxIDIndexValue) unmarshal(b []byte) error {
 
-	return nil
-}
+// 	return nil
+// }
 
 func (flp *fileLocPointer) marshal() ([]byte, error) {
 	buffer := proto.NewBuffer([]byte{})
