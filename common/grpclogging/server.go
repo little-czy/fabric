@@ -62,7 +62,12 @@ func applyOptions(opts ...Option) *options {
 	o := &options{
 		// Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.InfoLevel }),
 		// 修改orderer默认的输出level为debug
-		Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.DebugLevel }),
+		Leveler: LevelerFunc(func(ctx context.Context, msg string) zapcore.Level {
+			if msg == "streaming call completed" {
+				return zapcore.DebugLevel
+			}
+			return zapcore.InfoLevel
+		}),
 		PayloadLeveler: LevelerFunc(func(context.Context, string) zapcore.Level { return DefaultPayloadLevel }),
 	}
 	for _, opt := range opts {
