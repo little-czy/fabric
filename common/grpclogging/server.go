@@ -8,6 +8,7 @@ package grpclogging
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -67,6 +68,8 @@ func applyOptions(opts ...Option) *options {
 			// if msg == "streaming call completed" {
 			// 	return zapcore.DebugLevel
 			// }
+			fmt.Print(msg)
+
 			return zapcore.DebugLevel
 		}),
 		PayloadLeveler: LevelerFunc(func(context.Context, string) zapcore.Level { return DefaultPayloadLevel }),
