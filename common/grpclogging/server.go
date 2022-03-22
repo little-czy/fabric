@@ -8,7 +8,6 @@ package grpclogging
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -63,15 +62,7 @@ func applyOptions(opts ...Option) *options {
 	o := &options{
 		// Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.InfoLevel }),
 		// 修改orderer默认的输出level为debug
-		Leveler: LevelerFunc(func(ctx context.Context, msg string) zapcore.Level {
-
-			// if msg == "streaming call completed" {
-			// 	return zapcore.DebugLevel
-			// }
-			fmt.Print(msg)
-
-			return zapcore.DebugLevel
-		}),
+		Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.InfoLevel }),
 		PayloadLeveler: LevelerFunc(func(context.Context, string) zapcore.Level { return DefaultPayloadLevel }),
 	}
 	for _, opt := range opts {
@@ -137,7 +128,9 @@ func StreamServerInterceptor(logger *zap.Logger, opts ...Option) grpc.StreamServ
 		}
 
 		err := handler(service, wrappedStream)
-		if ce := logger.Check(o.Level(ctx, info.FullMethod), "streaming call completed"); ce != nil {
+		// if ce := logger.Check(o.Level(ctx, info.FullMethod), "streaming call completed"); ce != nil {
+		// --M1.4  取消打印streaming calllog 简化log
+		if ce := logger.Check(zapcore.DebugLevel, "streaming call completed"); ce != nil {
 			ce.Write(
 				Error(err),
 				zap.Stringer("grpc.code", grpc.Code(err)),
