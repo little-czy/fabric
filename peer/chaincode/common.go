@@ -99,6 +99,8 @@ func chaincodeInvokeOrQuery(cmd *cobra.Command, invoke bool, cf *ChaincodeCmdFac
 	// otherwise, tests can explicitly set their own txid
 	txID := ""
 
+	logger.Infof("--M1.4 chaincode Invoke: reach here")
+
 	proposalResp, err := ChaincodeInvokeOrQuery(
 		spec,
 		channelID,

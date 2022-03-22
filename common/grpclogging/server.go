@@ -60,7 +60,9 @@ func WithPayloadLeveler(l PayloadLeveler) Option {
 
 func applyOptions(opts ...Option) *options {
 	o := &options{
-		Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.InfoLevel }),
+		// Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.InfoLevel }),
+		// 修改orderer默认的输出level为debug
+		Leveler:        LevelerFunc(func(context.Context, string) zapcore.Level { return zapcore.DebugLevel }),
 		PayloadLeveler: LevelerFunc(func(context.Context, string) zapcore.Level { return DefaultPayloadLevel }),
 	}
 	for _, opt := range opts {

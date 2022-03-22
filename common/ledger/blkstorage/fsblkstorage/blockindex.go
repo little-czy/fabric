@@ -139,6 +139,7 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 				return marshalErr
 			}
 
+			// M1.4 新增合并索引
 			indexVal := &blockindex.TxIDIndexValue{
 				BlkLocation:      flpBytes,
 				TxLocation:       txFlpBytes,
