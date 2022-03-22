@@ -92,7 +92,7 @@ func (s *StandardChannel) ClassifyMsg(chdr *cb.ChannelHeader) Classification {
 // configuration sequence number and nil on success, or an error if the message is not valid
 func (s *StandardChannel) ProcessNormalMsg(env *cb.Envelope) (configSeq uint64, err error) {
 
-	logger.Infof("processNormalMsg reach here")
+	// logger.Infof("processNormalMsg reach here")
 
 	oc, ok := s.support.OrdererConfig()
 	if !ok {

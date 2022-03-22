@@ -27,6 +27,9 @@ func (bc *blockCreator) createNextBlock(envs []*cb.Envelope) *cb.Block {
 	}
 
 	var err error
+
+	bc.logger.Infof("envs len is :", len(envs))
+
 	for i, env := range envs {
 		data.Data[i], err = proto.Marshal(env)
 		if err != nil {
