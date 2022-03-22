@@ -298,7 +298,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘 500tx时1.5M一个块
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
-	logger.Infof("addBlock appendToFile blockBytes in %dms(us) ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
+	logger.Debugf("addBlock appendToFile blockBytes in %dms(us) ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
 
 	if err != nil {
 		truncateErr := mgr.currentFileWriter.truncateFile(mgr.cpInfo.latestFileChunksize)
@@ -343,7 +343,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return err
 	}
 
-	logger.Infof("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
+	logger.Debugf("addBlock saveIndex in %dms", time.Since(startUpdateIndex).Milliseconds())
 
 	//update the checkpoint info (for storage) and the blockchain info (for APIs) in the manager
 	mgr.updateCheckpoint(newCPInfo)
