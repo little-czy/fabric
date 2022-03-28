@@ -71,6 +71,9 @@ func (bw *BlockWriter) CreateNextBlock(messages []*cb.Envelope) *cb.Block {
 		Data: make([][]byte, len(messages)),
 	}
 
+	// M1.4
+	logger.Infof("envs len is :", len(messages))
+
 	var err error
 	for i, msg := range messages {
 		data.Data[i], err = proto.Marshal(msg)
