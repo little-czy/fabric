@@ -28,8 +28,8 @@ func (bc *blockCreator) createNextBlock(envs []*cb.Envelope) *cb.Block {
 
 	var err error
 
-	// --M1.4
-	bc.logger.Infof("envs len is :%d", len(envs))
+	// // --M1.4
+	// bc.logger.Infof("envs len is :%d", len(envs))
 
 	for i, env := range envs {
 		data.Data[i], err = proto.Marshal(env)

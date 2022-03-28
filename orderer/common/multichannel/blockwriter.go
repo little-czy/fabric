@@ -71,8 +71,8 @@ func (bw *BlockWriter) CreateNextBlock(messages []*cb.Envelope) *cb.Block {
 		Data: make([][]byte, len(messages)),
 	}
 
-	// M1.4
-	logger.Infof("envs len is %d:", len(messages))
+	// M1.4 打印每个区块的大小，messages是个数组，其中每一个元素为一笔交易
+	logger.Infof("envs len is %d", len(messages))
 
 	var err error
 	for i, msg := range messages {
