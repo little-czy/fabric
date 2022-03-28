@@ -72,7 +72,7 @@ func (bw *BlockWriter) CreateNextBlock(messages []*cb.Envelope) *cb.Block {
 	}
 
 	// M1.4
-	logger.Infof("envs len is :", len(messages))
+	logger.Infof("envs len is %d:", len(messages))
 
 	var err error
 	for i, msg := range messages {
