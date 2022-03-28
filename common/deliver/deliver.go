@@ -152,6 +152,9 @@ func NewHandler(cm ChainManager, timeWindow time.Duration, mutualTLS bool, metri
 func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 	addr := util.ExtractRemoteAddress(ctx)
 	logger.Debugf("Starting new deliver loop for %s", addr)
+
+	logger.Infof("Starting new deliver loop for %s", addr)
+
 	h.Metrics.StreamsOpened.Add(1)
 	defer h.Metrics.StreamsClosed.Add(1)
 	for {
