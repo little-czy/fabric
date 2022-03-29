@@ -169,6 +169,10 @@ func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 			return err
 		}
 
+		// --M1.4
+
+		logger.Infof("Start deliverBlock for %s", addr)
+
 		status, err := h.deliverBlocks(ctx, srv, envelope)
 		if err != nil {
 			return err
