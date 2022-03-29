@@ -162,8 +162,8 @@ func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 		logger.Debugf("Attempting to read seek info message from %s", addr)
 		envelope, err := srv.Recv()
 
-		// --M1.4
-		logger.Infof("srv.Recv, Start deliverBlock for %s", addr)
+		// // --M1.4
+		// logger.Infof("srv.Recv, Start deliverBlock for %s", addr)
 
 		if err == io.EOF {
 			logger.Debugf("Received EOF from %s, hangup", addr)
@@ -347,6 +347,9 @@ func (h *Handler) deliverBlocks(ctx context.Context, srv *Server, envelope *cb.E
 		}
 
 		logger.Debugf("[channel: %s] Delivering block [%d] for (%p) for %s", chdr.ChannelId, block.Header.Number, seekInfo, addr)
+
+		// --M1.4
+		logger.Infof("[channel: %s] Delivering block [%d] for (%p) for %s", chdr.ChannelId, block.Header.Number, seekInfo, addr)
 
 		if err := srv.SendBlockResponse(block); err != nil {
 			logger.Warningf("[channel: %s] Error sending to %s: %s", chdr.ChannelId, addr, err)
