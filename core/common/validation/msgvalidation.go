@@ -662,3 +662,117 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		return nil, pb.TxValidationCode_UNSUPPORTED_TX_PAYLOAD
 	}
 }
+
+// TODO --M1.4
+// 在这里建立映射map，并实现处理的相关函数
+// var AliasForCreator = make(map[]string)
+
+// ValidateTransaction checks that the transaction envelope is properly formed
+func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int, creatorsChan chan<- []byte) (*common.Payload, pb.TxValidationCode) {
+	putilsLogger.Debugf("ValidateTransactionEnvelope starts for envelope %p", e)
+
+	// check for nil argument
+	if e == nil {
+		putilsLogger.Errorf("Error: nil envelope")
+		return nil, pb.TxValidationCode_NIL_ENVELOPE
+	}
+
+	// get the payload from the envelope
+	payload, err := utils.GetPayload(e)
+	if err != nil {
+		putilsLogger.Errorf("GetPayload returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_PAYLOAD
+	}
+
+	putilsLogger.Debugf("Header is %s", payload.Header)
+
+	// validate the header
+	chdr, shdr, err := validateCommonHeader(payload.Header)
+	if err != nil {
+		putilsLogger.Errorf("validateCommonHeader returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
+	}
+
+	// // ---M1.4 验证shdr中creator的大小
+	// putilsLogger.Infof("Validate phase: env's size is %d", len(e.Payload))
+	putilsLogger.Infof("Validate phase: creator's size is %d", len(shdr.Creator))
+
+	// 往channel里面发送creator
+	// if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+	creatorsChan <- shdr.Creator
+
+	// ---M1.4 缓存chdr
+	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
+	blockCache.BCache.TxsCache[tIdx].Payl = payload
+
+	putilsLogger.Debugf("---validate blockCache : %v", blockCache.BCache.TxsCache[tIdx].Chdr)
+
+	// validate the signature in the envelope
+	err = checkSignatureFromCreator(shdr.Creator, e.Signature, e.Payload, chdr.ChannelId)
+	if err != nil {
+		putilsLogger.Errorf("checkSignatureFromCreator returns err %s", err)
+		return nil, pb.TxValidationCode_BAD_CREATOR_SIGNATURE
+	}
+
+	// TODO: ensure that creator can transact with us (some ACLs?) which set of APIs is supposed to give us this info?
+
+	// continue the validation in a way that depends on the type specified in the header
+	switch common.HeaderType(chdr.Type) {
+	case common.HeaderType_ENDORSER_TRANSACTION:
+		// Verify that the transaction ID has been computed properly.
+		// This check is needed to ensure that the lookup into the ledger
+		// for the same TxID catches duplicates.
+
+		// TODO --M1.4 这里验证了TxID
+
+		err = utils.CheckTxID(
+			chdr.TxId,
+			shdr.Nonce,
+			shdr.Creator)
+
+		if err != nil {
+			putilsLogger.Errorf("CheckTxID returns err %s", err)
+			return nil, pb.TxValidationCode_BAD_PROPOSAL_TXID
+		}
+
+		err = validateEndorserTransactionWithIndex(payload.Data, payload.Header, tIdx)
+		putilsLogger.Debugf("ValidateTransactionEnvelope returns err %s", err)
+
+		if err != nil {
+			putilsLogger.Errorf("validateEndorserTransaction returns err %s", err)
+			return payload, pb.TxValidationCode_INVALID_ENDORSER_TRANSACTION
+		} else {
+			return payload, pb.TxValidationCode_VALID
+		}
+	case common.HeaderType_CONFIG:
+		// Config transactions have signatures inside which will be validated, especially at genesis there may be no creator or
+		// signature on the outermost envelope
+
+		err = validateConfigTransaction(payload.Data, payload.Header)
+
+		if err != nil {
+			putilsLogger.Errorf("validateConfigTransaction returns err %s", err)
+			return payload, pb.TxValidationCode_INVALID_CONFIG_TRANSACTION
+		} else {
+			return payload, pb.TxValidationCode_VALID
+		}
+	case common.HeaderType_TOKEN_TRANSACTION:
+		// Verify that the transaction ID has been computed properly.
+		// This check is needed to ensure that the lookup into the ledger
+		// for the same TxID catches duplicates.
+
+		err = utils.CheckTxID(
+			chdr.TxId,
+			shdr.Nonce,
+			shdr.Creator)
+
+		if err != nil {
+			putilsLogger.Errorf("CheckTxID returns err %s", err)
+			return nil, pb.TxValidationCode_BAD_PROPOSAL_TXID
+		}
+
+		return payload, pb.TxValidationCode_VALID
+	default:
+		return nil, pb.TxValidationCode_UNSUPPORTED_TX_PAYLOAD
+	}
+}
