@@ -18,6 +18,7 @@ package validation
 
 import (
 	"bytes"
+	"unsafe"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
@@ -579,6 +580,9 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		putilsLogger.Errorf("validateCommonHeader returns err %s", err)
 		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
 	}
+
+	// ---M1.4 验证shdr的大小
+	putilsLogger.Infof("Validate phase: shdr's size is %d", unsafe.Sizeof(shdr))
 
 	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
