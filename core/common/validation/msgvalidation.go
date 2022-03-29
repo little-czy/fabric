@@ -18,7 +18,6 @@ package validation
 
 import (
 	"bytes"
-	"unsafe"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
@@ -582,8 +581,8 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 	}
 
 	// ---M1.4 验证shdr的大小
-	putilsLogger.Infof("Validate phase: env's size is %d", unsafe.Sizeof(*e))
-	putilsLogger.Infof("Validate phase: shdr's size is %d", unsafe.Sizeof(*shdr))
+	// putilsLogger.Infof("Validate phase: env's size is %d", unsafe.Sizeof(*e))
+	putilsLogger.Infof("Validate phase: shdr's size is %d", len(shdr.Creator))
 
 	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
