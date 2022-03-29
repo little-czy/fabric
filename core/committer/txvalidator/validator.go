@@ -96,6 +96,17 @@ type blockValidationResult struct {
 	txid                 string
 }
 
+// --M1.4 在返回的结果中把creator一块返回回来
+type blockValidationResultWithCreator struct {
+	tIdx                 int
+	validationCode       peer.TxValidationCode
+	txsChaincodeName     *sysccprovider.ChaincodeInstance
+	txsUpgradedChaincode *sysccprovider.ChaincodeInstance
+	txsCreator           []byte
+	err                  error
+	txid                 string
+}
+
 // NewTxValidator creates new transactions validator
 func NewTxValidator(chainID string, support Support, sccp sysccprovider.SystemChaincodeProvider, pm PluginMapper) *TxValidator {
 	// Encapsulates interface implementation
@@ -153,6 +164,8 @@ func (v *TxValidator) Validate(block *common.Block) error {
 
 	results := make(chan *blockValidationResult)
 
+	// creatorsInblock := make(chan []byte, 500)
+
 	go func() {
 		for tIdx, d := range block.Data.Data {
 			// ensure that we don't have too many concurrent validation workers
@@ -169,6 +182,13 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			}(tIdx, d)
 		}
 	}()
+
+	// --M1.4
+	// TODO 处理creatorsInblock中存储的creators结果
+	// TODO 或者选择将creator放在result里面一块传出来
+	// go func(){
+	// 处理creator映射
+	// }
 
 	logger.Debugf("expecting %d block validation responses", len(block.Data.Data))
 
