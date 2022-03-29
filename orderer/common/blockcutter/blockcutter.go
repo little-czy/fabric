@@ -67,6 +67,7 @@ func NewReceiverImpl(channelID string, sharedConfigFetcher OrdererConfigFetcher,
 //
 // Note that messageBatches can not be greater than 2.
 func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, pending bool) {
+
 	if len(r.pendingBatch) == 0 {
 		// We are beginning a new batch, mark the time
 		r.PendingBatchStartTime = time.Now()
@@ -115,6 +116,8 @@ func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, p
 
 	if uint32(len(r.pendingBatch)) >= batchSize.MaxMessageCount {
 		logger.Debugf("Batch size met, cutting batch")
+		// --M1.4
+		logger.Infof("Batch size met, cutting batch")
 		messageBatch := r.Cut()
 		messageBatches = append(messageBatches, messageBatch)
 		pending = false
