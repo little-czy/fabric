@@ -158,8 +158,13 @@ func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 	h.Metrics.StreamsOpened.Add(1)
 	defer h.Metrics.StreamsClosed.Add(1)
 	for {
+
 		logger.Debugf("Attempting to read seek info message from %s", addr)
 		envelope, err := srv.Recv()
+
+		// --M1.4
+		logger.Infof("srv.Recv, Start deliverBlock for %s", addr)
+
 		if err == io.EOF {
 			logger.Debugf("Received EOF from %s, hangup", addr)
 			return nil
@@ -168,10 +173,6 @@ func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 			logger.Warningf("Error reading from %s: %s", addr, err)
 			return err
 		}
-
-		// --M1.4
-
-		logger.Infof("Start deliverBlock for %s", addr)
 
 		status, err := h.deliverBlocks(ctx, srv, envelope)
 		if err != nil {
@@ -189,6 +190,7 @@ func (h *Handler) Handle(ctx context.Context, srv *Server) error {
 
 		logger.Debugf("Waiting for new SeekInfo from %s", addr)
 	}
+
 }
 
 func isFiltered(srv *Server) bool {
