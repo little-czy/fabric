@@ -582,6 +582,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 	}
 
 	// ---M1.4 验证shdr的大小
+	putilsLogger.Infof("Validate phase: env's size is %d", unsafe.Sizeof(e))
 	putilsLogger.Infof("Validate phase: shdr's size is %d", unsafe.Sizeof(shdr))
 
 	// ---M1.4 缓存chdr
