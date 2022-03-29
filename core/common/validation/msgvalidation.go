@@ -254,6 +254,9 @@ func validateCommonHeader(hdr *common.Header) (*common.ChannelHeader, *common.Si
 		return nil, nil, err
 	}
 
+	//---M1.4 SignatureHeader的大小
+	putilsLogger.Infof("Validate phase: shdr's size is %d", len(hdr.SignatureHeader))
+
 	shdr, err := utils.GetSignatureHeader(hdr.SignatureHeader)
 	if err != nil {
 		return nil, nil, err
@@ -580,9 +583,9 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
 	}
 
-	// ---M1.4 验证shdr的大小
-	// putilsLogger.Infof("Validate phase: env's size is %d", unsafe.Sizeof(*e))
-	putilsLogger.Infof("Validate phase: shdr's size is %d", len(shdr.Creator))
+	// ---M1.4 验证shdr中creator的大小
+	putilsLogger.Infof("Validate phase: env's size is %d", len(e.Payload))
+	putilsLogger.Infof("Validate phase: creator's size is %d", len(shdr.Creator))
 
 	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
