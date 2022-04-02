@@ -585,7 +585,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 
 	// // ---M1.4 验证shdr中creator的大小
 	// putilsLogger.Infof("Validate phase: env's size is %d", len(e.Payload))
-	putilsLogger.Infof("Validate phase: creator's size is %d", len(shdr.Creator))
+	putilsLogger.Debugf("Validate phase: creator's size is %d", len(shdr.Creator))
 
 	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr
@@ -664,11 +664,39 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 }
 
 // TODO --M1.4
+
+const (
+	// creatorLenth is the expected length of the hash
+	CreatorLength = 810
+)
+
+type FixedLenCreatorBytes [CreatorLength]byte
+
+func ToFixedLenCreatorBytes(creator []byte) FixedLenCreatorBytes {
+	var fixedCreator FixedLenCreatorBytes
+	fixedCreator.SetBytes(creator)
+	return fixedCreator
+}
+
+// SetBytes sets the FixedLenCreatorBytes to the value of b.
+// If b is larger than len(h), b will be cropped from the left.
+func (h *FixedLenCreatorBytes) SetBytes(b []byte) {
+	if len(b) > len(h) {
+		b = b[len(b)-CreatorLength:]
+	}
+	// TODO  内存拷贝
+	copy(h[CreatorLength-len(b):], b)
+}
+
 // 在这里建立映射map，并实现处理的相关函数
-// var AliasForCreator = make(map[]string)
+// 哈希映射为定长的creator字节数组→短字节数组
+var AliasForCreator = make(map[FixedLenCreatorBytes][]byte)
+
+// TODO 使用哈夫曼编码
+var CurEncode = 1
 
 // ValidateTransaction checks that the transaction envelope is properly formed
-func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int, creatorsChan chan<- []byte) (*common.Payload, pb.TxValidationCode) {
+func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int, creatorsChan chan<- FixedLenCreatorBytes) (*common.Payload, pb.TxValidationCode) {
 	putilsLogger.Debugf("ValidateTransactionEnvelope starts for envelope %p", e)
 
 	// check for nil argument
@@ -693,13 +721,22 @@ func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfi
 		return nil, pb.TxValidationCode_BAD_COMMON_HEADER
 	}
 
-	// // ---M1.4 验证shdr中creator的大小
+	// ---M1.4 验证shdr中creator的大小
+	// creator的大小为810字节
 	// putilsLogger.Infof("Validate phase: env's size is %d", len(e.Payload))
-	putilsLogger.Infof("Validate phase: creator's size is %d", len(shdr.Creator))
+	putilsLogger.Debugf("Validate phase: creator's size is %d", len(shdr.Creator))
 
 	// 往channel里面发送creator
-	// if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-	creatorsChan <- shdr.Creator
+	// 这里需要判断Map中有没有存储该creator，如果没有则应当加入映射表中，如果有则进行映射，且在下一个块背书时可以使用短字节进行生成交易
+	// TODO 访问的时候是否加锁，应当加上一个读写锁
+
+	fixedC := ToFixedLenCreatorBytes(shdr.Creator)
+	if _, ok := AliasForCreator[fixedC]; !ok {
+		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+		creatorsChan <- fixedC
+	}
+
+	// TODO 在背书的时候查表，如果存在则用转换之后的
 
 	// ---M1.4 缓存chdr
 	blockCache.BCache.TxsCache[tIdx].Chdr = chdr

@@ -164,7 +164,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 
 	results := make(chan *blockValidationResult)
 
-	creatorsChan := make(chan []byte, 500)
+	creatorsChan := make(chan validation.FixedLenCreatorBytes, 500)
 
 	go func() {
 		for tIdx, d := range block.Data.Data {
@@ -182,13 +182,6 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			}(tIdx, d)
 		}
 	}()
-
-	// --M1.4
-	// TODO 处理creatorsInblock中存储的creators结果
-	// TODO 或者选择将creator放在result里面一块传出来
-	// go func(){
-	// // 处理creator映射
-	// }
 
 	logger.Debugf("expecting %d block validation responses", len(block.Data.Data))
 
@@ -224,6 +217,25 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			}
 		}
 	}
+
+	// --M1.4
+	// TODO 处理creatorsInblock中存储的creators结果
+	// TODO 或者选择将creator放在result里面一块传出来
+	// 在result处理结束后进行映射，与验证线程串行执行，不会产生读写冲突，但是与背书任务可能会产生冲突
+	go func() {
+		// 这里也应该加一个锁，防止下一个区块开始执行
+		// 处理creator映射
+		taskNum := len(creatorsChan)
+		// 只需要确定同样的Creator会被映射成相同的值，而区块中天然有序
+		for i := 0; i < taskNum; i++ {
+			oriCreatorBytes := <-creatorsChan
+			// int转[]byte
+			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
+			validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
+			logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
+		}
+
+	}()
 
 	// if we're here, all workers have completed the validation.
 	// If there was an error we return the error from the first
@@ -518,7 +530,7 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 // --M1.4
 // TODO: 写一个每个交易能传递creator的版本
 
-func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- []byte) {
+func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- validation.FixedLenCreatorBytes) {
 	block := req.block
 	d := req.d
 	tIdx := req.tIdx
