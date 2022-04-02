@@ -230,10 +230,17 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	for i := 0; i < taskNum; i++ {
 		oriCreatorBytes := <-creatorsChan
 		// int转[]byte
-		// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
-		// TODO concurrent map read and map write
-		validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
-		logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
+		if _, ok := validation.AliasForCreator[oriCreatorBytes]; !ok {
+			//再进行一次判断，如果没有则存到map中
+			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+			//如果没有则进行保存
+			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
+			// TODO concurrent map read and map write
+			validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
+			validation.CurEncode++
+			logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
+		}
+
 	}
 
 	// }()
