@@ -444,8 +444,8 @@ func ChaincodeInvokeOrQuery(
 		return nil, errors.WithMessage(err, fmt.Sprintf("error serializing identity for %s", signer.GetIdentifier()))
 	}
 
-	// ---M1.4
-	logger.Infof("Cli Creator's bytes is :%v", string(creator))
+	// ---M1.4 通过cmd调用时，这些creator为各个组织的admin证书
+	logger.Debugf("Cli Creator's bytes is :%v", string(creator))
 
 	funcName := "invoke"
 	if !invoke {

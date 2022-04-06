@@ -688,6 +688,9 @@ func (h *FixedLenCreatorBytes) SetBytes(b []byte) {
 	copy(h[CreatorLength-len(b):], b)
 }
 
+// Bytes gets the byte representation of the underlying hash.
+func (h FixedLenCreatorBytes) Bytes() []byte { return h[:] }
+
 // 在这里建立映射map，并实现处理的相关函数
 // 哈希映射为定长的creator字节数组→短字节数组
 var AliasForCreator = make(map[FixedLenCreatorBytes][]byte)
