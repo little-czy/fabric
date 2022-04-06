@@ -147,6 +147,9 @@ func CreateSignedTx(proposal *peer.Proposal, signer msp.SigningIdentity, resps .
 		return nil, errors.New("signer must be the same as the one referenced in the header")
 	}
 
+	// ---M1.4 输出signer身份
+	fmt.Printf("signerBytes is :%v", signerBytes)
+
 	// get header extensions so we have the visibility field
 	hdrExt, err := GetChaincodeHeaderExtension(hdr)
 	if err != nil {
