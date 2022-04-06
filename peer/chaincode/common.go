@@ -445,7 +445,7 @@ func ChaincodeInvokeOrQuery(
 	}
 
 	// ---M1.4
-	logger.Debugf("Cli Creator's bytes is :%v", string(creator))
+	logger.Infof("Cli Creator's bytes is :%v", string(creator))
 
 	funcName := "invoke"
 	if !invoke {
