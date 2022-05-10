@@ -164,7 +164,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 
 	results := make(chan *blockValidationResult)
 
-	creatorsChan := make(chan validation.FixedLenCreatorBytes, 500)
+	// creatorsChan := make(chan validation.FixedLenCreatorBytes, 500)
 
 	go func() {
 		for tIdx, d := range block.Data.Data {
@@ -174,11 +174,11 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			go func(index int, data []byte) {
 				defer v.Support.Release(1)
 
-				v.validateTxWithCreator(&blockValidationRequest{
+				v.validateTx(&blockValidationRequest{
 					d:     data,
 					block: block,
 					tIdx:  index,
-				}, results, creatorsChan)
+				}, results)
 			}(tIdx, d)
 		}
 	}()
@@ -225,25 +225,25 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	// go func() {
 	// 这里也应该加一个锁，防止下一个区块开始执行
 	// 处理creator映射
-	taskNum := len(creatorsChan)
-	// 只需要确定同样的Creator会被映射成相同的值，而区块中天然有序
-	for i := 0; i < taskNum; i++ {
-		oriCreatorBytes := <-creatorsChan
-		// int转[]byte
-		if _, ok := validation.AliasForCreator[oriCreatorBytes]; !ok {
-			//再进行一次判断，如果没有则存到map中
-			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-			//如果没有则进行保存
-			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
-			// TODO concurrent map read and map write
-			validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
-			validation.CurEncode++
-			logger.Infof("map %v to %v", string(oriCreatorBytes.Bytes()), validation.AliasForCreator[oriCreatorBytes])
-			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
+	// taskNum := len(creatorsChan)
+	// // 只需要确定同样的Creator会被映射成相同的值，而区块中天然有序
+	// for i := 0; i < taskNum; i++ {
+	// 	oriCreatorBytes := <-creatorsChan
+	// 	// int转[]byte
+	// 	if _, ok := validation.AliasForCreator[oriCreatorBytes]; !ok {
+	// 		//再进行一次判断，如果没有则存到map中
+	// 		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+	// 		//如果没有则进行保存
+	// 		// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
+	// 		// TODO concurrent map read and map write
+	// 		validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
+	// 		validation.CurEncode++
+	// 		logger.Infof("map %v to %v", string(oriCreatorBytes.Bytes()), validation.AliasForCreator[oriCreatorBytes])
+	// 		// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
-		}
+	// 	}
 
-	}
+	// }
 
 	// }()
 
