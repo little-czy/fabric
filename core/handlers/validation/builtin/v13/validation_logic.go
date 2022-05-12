@@ -155,6 +155,8 @@ func (vscc *Validator) Validate(
 ) commonerrors.TxValidationError {
 	vscc.stateBasedValidator.PreValidate(uint64(txPosition), block)
 
+	logger.Infof("Reach here, use V13capital")
+
 	va, err := vscc.extractValidationArtifacts(block, txPosition, actionPosition)
 	if err != nil {
 		vscc.stateBasedValidator.PostValidate(namespace, block.Header.Number, uint64(txPosition), err)

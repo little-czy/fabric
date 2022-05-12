@@ -65,7 +65,6 @@ func (v *DefaultValidation) Validate(block *common.Block, namespace string, txPo
 	switch {
 	case v.Capabilities.V1_3Validation():
 		// M1.4 capabilities
-		logger.Infof("use v1_3Validation")
 		err = v.TxValidatorV1_3.Validate(block, namespace, txPosition, actionPosition, serializedPolicy.Bytes())
 
 	case v.Capabilities.V1_2Validation():
