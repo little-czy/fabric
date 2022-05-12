@@ -93,6 +93,9 @@ func (vscc *Validator) Validate(
 	actionPosition int,
 	policyBytes []byte,
 ) commonerrors.TxValidationError {
+
+	logger.Infof("Reach here, use V12 capital")
+
 	// get the envelope...
 	env, err := utils.GetEnvelopeFromBlock(block.Data.Data[txPosition])
 	if err != nil {
