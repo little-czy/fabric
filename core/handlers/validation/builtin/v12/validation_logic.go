@@ -94,7 +94,7 @@ func (vscc *Validator) Validate(
 	policyBytes []byte,
 ) commonerrors.TxValidationError {
 
-	logger.Infof("Reach here, use V12 capital")
+	logger.Debugf("Reach here, use V12 capital")
 
 	// get the envelope...
 	env, err := utils.GetEnvelopeFromBlock(block.Data.Data[txPosition])
@@ -776,6 +776,9 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 	signatureMap := make(map[string]struct{})
 	// loop through each of the endorsements and build the signature set
 	for _, endorsement := range cap.Action.Endorsements {
+
+		// TODO ,1.4 在这里可以获得endorser的证书
+
 		//unmarshal endorser bytes
 		serializedIdentity := &msp.SerializedIdentity{}
 		if err := proto.Unmarshal(endorsement.Endorser, serializedIdentity); err != nil {
@@ -783,6 +786,10 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 			return nil, policyErr(fmt.Errorf("Unmarshal endorser error: %s", err))
 		}
 		identity := serializedIdentity.Mspid + string(serializedIdentity.IdBytes)
+
+		// M1.4 打印endorser的信息
+		logger.Infof("endorser identity's, Mspid:%s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
+
 		if _, ok := signatureMap[identity]; ok {
 			// Endorsement with the same identity has already been added
 			logger.Warningf("Ignoring duplicated identity, Mspid: %s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
