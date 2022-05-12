@@ -170,6 +170,9 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 		return errors.WithMessage(err, "MSP error")
 	}
 
+	// M1.4 ---Validate creator identifier
+	putilsLogger.Infof("creator is %s", creator.GetIdentifier())
+
 	putilsLogger.Debugf("creator is %s", creator.GetIdentifier())
 
 	// ensure that creator is a valid certificate
@@ -725,7 +728,7 @@ func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfi
 	}
 
 	// ---M1.4 验证shdr中creator的大小
-	// creator的大小为810字节
+	// creator的大小约为850字节
 	// putilsLogger.Infof("Validate phase: env's size is %d", len(e.Payload))
 	putilsLogger.Debugf("Validate phase: creator's size is %d", len(shdr.Creator))
 
