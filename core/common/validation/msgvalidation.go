@@ -667,7 +667,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 
 const (
 	// creatorLenth is the expected length of the hash
-	CreatorLength = 810
+	CreatorLength = 850
 )
 
 type FixedLenCreatorBytes [CreatorLength]byte
