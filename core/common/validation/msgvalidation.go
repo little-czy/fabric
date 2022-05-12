@@ -211,6 +211,7 @@ func validateSignatureHeader(sHdr *common.SignatureHeader) error {
 		return errors.New("invalid creator specified in the header")
 	}
 
+	// M1.4 print sHdr.creator
 	putilsLogger.Infof("sHdr is: %v", string(sHdr.Creator))
 
 	return nil
