@@ -25,7 +25,7 @@ func LoadLocalMspWithType(dir string, bccspConfig *factory.FactoryOpts, mspID, m
 	}
 
 	// M1.4 打印初始化LOCAL MSP的信息
-	mspLogger.Infof("LoadLoacalMSPWithType: %s", mspID)
+	mspLogger.Infof("LoadLoacalMSPWithType: %s\n", mspID)
 
 	conf, err := msp.GetLocalMspConfigWithType(dir, bccspConfig, mspID, mspType)
 	if err != nil {
