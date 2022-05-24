@@ -171,7 +171,7 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 	}
 
 	// M1.4 ---Validate creator identifier
-	// putilsLogger.Infof("creator is %s", creator.GetIdentifier())
+	putilsLogger.Infof("creator is %s", creator.GetIdentifier())
 
 	putilsLogger.Debugf("creator is %s", creator.GetIdentifier())
 
