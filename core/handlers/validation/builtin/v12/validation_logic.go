@@ -788,7 +788,7 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 		identity := serializedIdentity.Mspid + string(serializedIdentity.IdBytes)
 
 		// M1.4 打印endorser的信息
-		logger.Infof("endorser identity's, Mspid:%s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
+		logger.Debugf("endorser identity's, Mspid:%s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
 
 		if _, ok := signatureMap[identity]; ok {
 			// Endorsement with the same identity has already been added

@@ -212,7 +212,7 @@ func validateSignatureHeader(sHdr *common.SignatureHeader) error {
 	}
 
 	// M1.4 print sHdr.creator
-	putilsLogger.Infof("sHdr is: %v", string(sHdr.Creator))
+	putilsLogger.Debugf("sHdr is: %v", string(sHdr.Creator))
 
 	return nil
 }
