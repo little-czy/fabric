@@ -24,6 +24,9 @@ func (msp *bccspmsp) validateIdentity(id *identity) error {
 		return errors.WithMessage(err, "could not obtain certification chain")
 	}
 
+	// M1.4 显示验证的流程, 打印验证链
+	mspIdentityLogger.Infof("validationChain is %v\n", validationChain)
+
 	err = msp.validateIdentityAgainstChain(id, validationChain)
 	if err != nil {
 		return errors.WithMessage(err, "could not validate identity against certification chain")
