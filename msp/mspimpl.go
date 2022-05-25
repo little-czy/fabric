@@ -291,6 +291,8 @@ func (msp *bccspmsp) GetSigningIdentity(identifier *IdentityIdentifier) (Signing
 // error otherwise
 func (msp *bccspmsp) Validate(id Identity) error {
 	mspLogger.Debugf("MSP %s validating identity", msp.name)
+	// M1.4 显示验证shdr中creator证书的过程
+	mspLogger.Infof("MSP %s validating identity", msp.name)
 
 	switch id := id.(type) {
 	// If this identity is of this specific type,
