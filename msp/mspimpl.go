@@ -738,9 +738,9 @@ func (msp *bccspmsp) getValidationChain(cert *x509.Certificate, isIntermediateCh
 	}
 
 	// M1.4 打印msp证书树
-	for key, value := range msp.certificationTreeInternalNodesMap {
-		mspIdentityLogger.Infof("msp Certification Tree internal Nodes map: %s\n", key, value)
-	}
+	// for key, value := range msp.certificationTreeInternalNodesMap {
+	// 	mspIdentityLogger.Infof("msp Certification Tree internal Nodes map: %s\n", key, value)
+	// }
 
 	return validationChain, nil
 }
