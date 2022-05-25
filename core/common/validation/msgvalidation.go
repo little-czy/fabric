@@ -184,7 +184,7 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 		return errors.WithMessage(err, "creator certificate is not valid")
 	}
 
-	putilsLogger.Debugf("creator is valid")
+	putilsLogger.Infof("creator is valid")
 
 	// validate the signature
 	err = creator.Verify(msg, sig)

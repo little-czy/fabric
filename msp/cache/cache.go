@@ -60,7 +60,7 @@ func (id *cachedIdentity) SatisfiesPrincipal(principal *pmsp.MSPPrincipal) error
 
 func (id *cachedIdentity) Validate() error {
 	// M1.4
-	mspLogger.Infof("MSP Validate reach here: cachedIdentity")
+	mspLogger.Debugf("MSP Validate reach here: cachedIdentity")
 	return id.cache.Validate(id.Identity)
 }
 
