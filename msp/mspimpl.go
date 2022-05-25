@@ -736,6 +736,12 @@ func (msp *bccspmsp) getValidationChain(cert *x509.Certificate, isIntermediateCh
 	if msp.certificationTreeInternalNodesMap[string(validationChain[parentPosition].Raw)] {
 		return nil, errors.Errorf("invalid validation chain. Parent certificate should be a leaf of the certification tree [%v]", cert.Raw)
 	}
+
+	// M1.4 打印msp证书树
+	for key, value := range msp.certificationTreeInternalNodesMap {
+		mspIdentityLogger.Infof("msp Certification Tree internal Nodes map: %s\n", key, value)
+	}
+
 	return validationChain, nil
 }
 
