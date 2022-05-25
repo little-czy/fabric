@@ -326,6 +326,8 @@ func (s *MSPMessageCryptoService) getValidatedIdentity(peerIdentity api.PeerIden
 
 		mcsLogger.Debugf("Validation succeeded [% x] on [%s]", peerIdentity, chainID)
 
+		mcsLogger.Infof("Validation succeeded [% x] on [%s]", peerIdentity, chainID)
+
 		return identity, common.ChainID(chainID), nil
 	}
 
