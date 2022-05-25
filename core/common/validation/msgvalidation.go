@@ -187,6 +187,9 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 	err = creator.Verify(msg, sig)
 	if err != nil {
 		return errors.WithMessage(err, "creator's signature over the proposal is not valid")
+	} else {
+		// M1.4
+		putilsLogger.Infof("validate signature successfully!")
 	}
 
 	putilsLogger.Debugf("exits successfully")
