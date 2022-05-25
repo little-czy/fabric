@@ -583,6 +583,8 @@ func (id *idemixidentity) GetOrganizationalUnits() []*OUIdentifier {
 }
 
 func (id *idemixidentity) Validate() error {
+	// M1.4
+	mspIdentityLogger.Infof("MSP Validate reach here: idemixidentity")
 	return id.msp.Validate(id)
 }
 

@@ -92,6 +92,8 @@ func (id *identity) GetMSPIdentifier() string {
 
 // Validate returns nil if this instance is a valid identity or an error otherwise
 func (id *identity) Validate() error {
+	// M1.4
+	mspIdentityLogger.Infof("MSP Validate reach here: Identity validate")
 	return id.msp.Validate(id)
 }
 
