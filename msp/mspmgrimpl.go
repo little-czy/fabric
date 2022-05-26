@@ -17,6 +17,8 @@ limitations under the License.
 package msp
 
 import (
+	"reflect"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/protos/msp"
@@ -95,6 +97,9 @@ func (mgr *mspManagerImpl) DeserializeIdentity(serializedID []byte) (Identity, e
 	if msp == nil {
 		return nil, errors.Errorf("MSP %s is unknown", sId.Mspid)
 	}
+
+	// M1.4获得msp的类型:
+	mspIdentityLogger.Infof("msp type is :%s", reflect.TypeOf(msp).Elem().Name())
 
 	switch t := msp.(type) {
 	case *bccspmsp:
