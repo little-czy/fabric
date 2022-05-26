@@ -25,7 +25,7 @@ func (msp *bccspmsp) validateIdentity(id *identity) error {
 	}
 
 	// M1.4 显示验证的流程, 打印验证链
-	mspIdentityLogger.Infof("validationChain is %v\n", validationChain[1].SerialNumber)
+	mspIdentityLogger.Debugf("validationChain is %v\n", validationChain[1].SerialNumber)
 
 	err = msp.validateIdentityAgainstChain(id, validationChain)
 	if err != nil {
