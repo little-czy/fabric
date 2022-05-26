@@ -165,14 +165,17 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 		return errors.Errorf("could not get msp for channel [%s]", ChainID)
 	}
 
+	// M1.4获得Creator的类型: cachedIdentity
+	putilsLogger.Debugf("mspObj type is :%s", reflect.TypeOf(mspObj).Elem().Name())
+
 	// get the identity of the creator
 	creator, err := mspObj.DeserializeIdentity(creatorBytes)
 	if err != nil {
 		return errors.WithMessage(err, "MSP error")
 	}
 
-	// M1.4获得Creator的类型
-	putilsLogger.Infof("Creator type is :%s", reflect.TypeOf(creator).Elem().Name())
+	// M1.4获得Creator的类型: cachedIdentity
+	putilsLogger.Debugf("Creator type is :%s", reflect.TypeOf(creator).Elem().Name())
 
 	// M1.4 ---Validate creator identifier
 	// putilsLogger.Infof("creator is %s", creator.GetIdentifier())
