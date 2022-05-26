@@ -91,11 +91,14 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 
 	id, err := c.MSP.DeserializeIdentity(serializedIdentity)
 	if err == nil {
+		mspLogger.Infof("add serializedIdentity %s to deserializeIdentityCache", string(serializedIdentity))
 		c.deserializeIdentityCache.add(string(serializedIdentity), id)
 		return &cachedIdentity{
 			cache:    c,
 			Identity: id.(msp.Identity),
 		}, nil
+	} else {
+		mspLogger.Warnf("c.MSP.DeserializeIdentity %s error!", string(serializedIdentity))
 	}
 	return nil, err
 }
