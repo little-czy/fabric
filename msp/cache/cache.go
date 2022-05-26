@@ -23,6 +23,10 @@ var mspLogger = flogging.MustGetLogger("msp")
 
 func New(o msp.MSP) (msp.MSP, error) {
 	mspLogger.Debugf("Creating Cache-MSP instance")
+
+	// M1.4 查看cache创建的过程
+	mspLogger.Infof("Creating Cache-MSP instance")
+
 	if o == nil {
 		return nil, errors.Errorf("Invalid passed MSP. It must be different from nil.")
 	}
@@ -102,6 +106,8 @@ func (c *cachedMSP) Validate(id msp.Identity) error {
 
 	err := c.MSP.Validate(id)
 	if err == nil {
+		// M1.4 验证MSP cache的缓存流程
+		mspLogger.Infof("Validate key %s successfully, And cache this identity", key)
 		c.validateIdentityCache.add(key, true)
 	}
 
