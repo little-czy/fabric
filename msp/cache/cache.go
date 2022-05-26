@@ -99,8 +99,8 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 			Identity: id.(msp.Identity),
 		}, nil
 	} else {
-		// M1.4 反序列化失败！
-		mspLogger.Warnf("c.MSP.DeserializeIdentity %s error:[%s]!", string(serializedIdentity), err.Error())
+		// M1.4 反序列化失败: [expected MSP ID Org1MSP, received Org2MSP/3/4]!
+		mspLogger.Debugf("c.MSP.DeserializeIdentity %s error:[%s]!", string(serializedIdentity), err.Error())
 	}
 	return nil, err
 }
