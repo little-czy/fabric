@@ -86,7 +86,8 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 	// M1.4 如果没有命中缓存，打印调用的deserializeIdentity的类型: bccspmsp
 	mspLogger.Debugf("c.MSP type is :%s", reflect.TypeOf(c.MSP).Elem().Name())
 	// M1.4 如果没有命中缓存，打印出该serializedIdentity
-	mspLogger.Infof("serializedIdentity is :%s", string(serializedIdentity))
+	// TODO 打印出的证书为其他四个机构的peer证书，为什么没有缓存？
+	mspLogger.Debugf("serializedIdentity is :%s", string(serializedIdentity))
 
 	id, err := c.MSP.DeserializeIdentity(serializedIdentity)
 	if err == nil {
