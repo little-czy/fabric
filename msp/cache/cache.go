@@ -84,7 +84,7 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 	}
 
 	// M1.4 如果没有命中缓存，打印调用的deserializeIdentity的类型
-	mspLogger.Debugf("c.MSP type is :%s", reflect.TypeOf(c.MSP).Elem().Name())
+	mspLogger.Infof("c.MSP type is :%s", reflect.TypeOf(c.MSP).Elem().Name())
 
 	id, err := c.MSP.DeserializeIdentity(serializedIdentity)
 	if err == nil {
