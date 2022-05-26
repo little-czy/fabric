@@ -93,7 +93,7 @@ func GetManagerForChain(chainID string) msp.MSPManager {
 	if !ok {
 		// M1.4 打印mspMgr创建以及使用的情况
 
-		mspLogger.Infof("Created new msp manager for channel `%s`", chainID)
+		mspLogger.Debugf("Created new msp manager for channel `%s`", chainID)
 		mspMgmtMgr := &mspMgmtMgr{msp.NewMSPManager(), false}
 		mspMap[chainID] = mspMgmtMgr
 		mspMgr = mspMgmtMgr
@@ -106,7 +106,7 @@ func GetManagerForChain(chainID string) msp.MSPManager {
 			panic("Found unexpected MSPManager type.")
 		}
 		// M1.4 打印mspMgr创建以及使用的情况
-		mspLogger.Infof("Returning existing manager for channel '%s'", chainID)
+		mspLogger.Debugf("Returning existing manager for channel '%s'", chainID)
 	}
 	return mspMgr
 }

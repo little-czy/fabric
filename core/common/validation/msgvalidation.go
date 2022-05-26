@@ -18,6 +18,7 @@ package validation
 
 import (
 	"bytes"
+	"reflect"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
@@ -169,6 +170,9 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 	if err != nil {
 		return errors.WithMessage(err, "MSP error")
 	}
+
+	// M1.4获得Creator的类型
+	putilsLogger.Infof("Creator type is :%s", reflect.TypeOf(creator).Elem().Name())
 
 	// M1.4 ---Validate creator identifier
 	// putilsLogger.Infof("creator is %s", creator.GetIdentifier())
