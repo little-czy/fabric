@@ -91,6 +91,7 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 
 	id, err := c.MSP.DeserializeIdentity(serializedIdentity)
 	if err == nil {
+		// M1.4
 		mspLogger.Infof("add serializedIdentity %s to deserializeIdentityCache", string(serializedIdentity))
 		c.deserializeIdentityCache.add(string(serializedIdentity), id)
 		return &cachedIdentity{
@@ -98,7 +99,8 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 			Identity: id.(msp.Identity),
 		}, nil
 	} else {
-		mspLogger.Warnf("c.MSP.DeserializeIdentity %s error!", string(serializedIdentity))
+		// M1.4 反序列化失败！
+		mspLogger.Warnf("c.MSP.DeserializeIdentity %s error:[%s]!", string(serializedIdentity), err.Error())
 	}
 	return nil, err
 }
