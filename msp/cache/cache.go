@@ -107,7 +107,7 @@ func (c *cachedMSP) Validate(id msp.Identity) error {
 	err := c.MSP.Validate(id)
 	if err == nil {
 		// M1.4 验证MSP cache的缓存流程
-		mspLogger.Infof("Validate key %s successfully, And cache this identity", key)
+		mspLogger.Warnf("Validate key %s successfully, And cache this identity", key)
 		c.validateIdentityCache.add(key, true)
 	}
 
