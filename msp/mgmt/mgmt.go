@@ -185,6 +185,10 @@ func loadLocaMSP() msp.MSP {
 
 // GetIdentityDeserializer returns the IdentityDeserializer for the given chain
 func GetIdentityDeserializer(chainID string) msp.IdentityDeserializer {
+
+	// M1.4
+	mspLogger.Infof("Get Identity Deserializer for chainID %s", chainID)
+
 	if chainID == "" {
 		return GetLocalMSP()
 	}
