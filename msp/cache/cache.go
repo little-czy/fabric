@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package cache
 
 import (
+	"reflect"
+
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/msp"
 	pmsp "github.com/hyperledger/fabric/protos/msp"
@@ -80,6 +82,9 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 			Identity: id.(msp.Identity),
 		}, nil
 	}
+
+	// M1.4 如果没有命中缓存，打印调用的deserializeIdentity的类型
+	mspLogger.Debugf("c.MSP type is :%s", reflect.TypeOf(c.MSP).Elem().Name())
 
 	id, err := c.MSP.DeserializeIdentity(serializedIdentity)
 	if err == nil {
