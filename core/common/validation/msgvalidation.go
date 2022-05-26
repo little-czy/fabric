@@ -177,14 +177,14 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 
 	// M1.4 --在这里验证证书的有效性
 	// ensure that creator is a valid certificate
-	putilsLogger.Infof("start Validate certificate")
+	putilsLogger.Debugf("start Validate certificate")
 
 	err = creator.Validate()
 	if err != nil {
 		return errors.WithMessage(err, "creator certificate is not valid")
 	}
 
-	putilsLogger.Infof("creator is valid")
+	putilsLogger.Debugf("creator is valid")
 
 	// validate the signature
 	err = creator.Verify(msg, sig)
