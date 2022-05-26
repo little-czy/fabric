@@ -98,8 +98,8 @@ func (mgr *mspManagerImpl) DeserializeIdentity(serializedID []byte) (Identity, e
 		return nil, errors.Errorf("MSP %s is unknown", sId.Mspid)
 	}
 
-	// M1.4获得msp的类型:
-	mspIdentityLogger.Infof("msp type is :%s", reflect.TypeOf(msp).Elem().Name())
+	// M1.4获得msp的类型: cachedMSP
+	mspIdentityLogger.Debugf("msp type is :%s", reflect.TypeOf(msp).Elem().Name())
 
 	switch t := msp.(type) {
 	case *bccspmsp:
