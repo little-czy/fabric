@@ -71,7 +71,7 @@ func (id *cachedIdentity) Validate() error {
 func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity, error) {
 
 	// M1.4
-	mspLogger.Infof("Get Deserialize Identity")
+	mspLogger.Debugf("Get Deserialize Identity")
 
 	id, ok := c.deserializeIdentityCache.get(string(serializedIdentity))
 	if ok {
