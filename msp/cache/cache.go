@@ -75,9 +75,9 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 	// M1.4
 	mspLogger.Debugf("Get Deserialize Identity")
 
-	// M1.4 打印msp.name
-	mspname, _ := c.MSP.GetIdentifier()
-	mspLogger.Infof("C.MSP.NAME IS %s", mspname)
+	// // M1.4 打印msp.name
+	// mspname, _ := c.MSP.GetIdentifier()
+	// mspLogger.Debugf("C.MSP.NAME IS %s", mspname)
 
 	id, ok := c.deserializeIdentityCache.get(string(serializedIdentity))
 	if ok {
