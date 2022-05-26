@@ -91,7 +91,9 @@ func GetManagerForChain(chainID string) msp.MSPManager {
 
 	mspMgr, ok := mspMap[chainID]
 	if !ok {
-		mspLogger.Debugf("Created new msp manager for channel `%s`", chainID)
+		// M1.4 打印mspMgr创建以及使用的情况
+
+		mspLogger.Infof("Created new msp manager for channel `%s`", chainID)
 		mspMgmtMgr := &mspMgmtMgr{msp.NewMSPManager(), false}
 		mspMap[chainID] = mspMgmtMgr
 		mspMgr = mspMgmtMgr
@@ -103,7 +105,8 @@ func GetManagerForChain(chainID string) msp.MSPManager {
 		if !(reflect.TypeOf(mspMgr).Elem().Name() == "mspManagerImpl" || reflect.TypeOf(mspMgr).Elem().Name() == "mspMgmtMgr") {
 			panic("Found unexpected MSPManager type.")
 		}
-		mspLogger.Debugf("Returning existing manager for channel '%s'", chainID)
+		// M1.4 打印mspMgr创建以及使用的情况
+		mspLogger.Infof("Returning existing manager for channel '%s'", chainID)
 	}
 	return mspMgr
 }
@@ -187,7 +190,7 @@ func loadLocaMSP() msp.MSP {
 func GetIdentityDeserializer(chainID string) msp.IdentityDeserializer {
 
 	// M1.4
-	mspLogger.Infof("Get Identity Deserializer for chainID %s", chainID)
+	mspLogger.Debugf("Get Identity Deserializer for chainID %s", chainID)
 
 	if chainID == "" {
 		return GetLocalMSP()
