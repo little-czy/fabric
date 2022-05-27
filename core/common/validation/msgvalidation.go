@@ -184,7 +184,7 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 
 	// M1.4 --在这里验证证书的有效性
 	// ensure that creator is a valid certificate, and show MSPID
-	putilsLogger.Infof("start Validate certificate of MSPID: %s", creator.GetMSPIdentifier())
+	putilsLogger.Debugf("start Validate certificate of MSPID: %s", creator.GetMSPIdentifier())
 
 	err = creator.Validate()
 	if err != nil {

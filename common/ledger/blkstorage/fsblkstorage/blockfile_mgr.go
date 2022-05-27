@@ -290,17 +290,19 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	startAppendFile := time.Now()
 
 	//append blockBytesEncodedLen to the file
-	// --M1.4 该过程比较快 20us
+	// --M1.4 该过程比较快 20us 写入区块长度，但是不落盘（写入内存中，还没有持久存储）
 	err = mgr.currentFileWriter.append(blockBytesEncodedLen, false)
 
 	if err == nil {
 		//append the actual block bytes to the file
-		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘 500tx时1.5M一个块
+		// --M1.4 该过程需要7ms左右的延迟，写文件并落盘 500tx时1.5M一个块，并进行持久存储
 		err = mgr.currentFileWriter.append(blockBytes, true)
 	}
 	logger.Debugf("addBlock appendToFile blockBytes in %dms(us) ,length:%d", time.Since(startAppendFile).Microseconds(), blockBytesLen)
 
 	if err != nil {
+		// truncate：截断、删节，输入参数为写入前的文件偏移量
+		// truncate()会将参数path 指定的文件大小改为参数length 指定的大小. 如果原来的文件大小比参数length 大, 则超过的部分会被删去.
 		truncateErr := mgr.currentFileWriter.truncateFile(mgr.cpInfo.latestFileChunksize)
 		if truncateErr != nil {
 			panic(fmt.Sprintf("Could not truncate current file to known size after an error during block append: %s", err))
@@ -311,13 +313,18 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	//Update the checkpoint info with the results of adding the new block
 	currentCPInfo := mgr.cpInfo
 	newCPInfo := &checkpointInfo{
+		// TODO M1.4 SuffixNum是什么
 		latestFileChunkSuffixNum: currentCPInfo.latestFileChunkSuffixNum,
 		latestFileChunksize:      currentCPInfo.latestFileChunksize + totalBytesToAppend,
 		isChainEmpty:             false,
 		lastBlockNumber:          block.Header.Number}
 
+	// M1.4 打印suffixNum
+	logger.Infof("currentCPInfo.latestFileChunkSuffixNum is: %d", newCPInfo.latestFileChunkSuffixNum)
+
 	//save the checkpoint information in the database
 	if err = mgr.saveCurrentInfo(newCPInfo, false); err != nil {
+		// truncate：截断、删节
 		truncateErr := mgr.currentFileWriter.truncateFile(currentCPInfo.latestFileChunksize)
 		if truncateErr != nil {
 			panic(fmt.Sprintf("Error in truncating current file to known size after an error in saving checkpoint info: %s", err))
@@ -325,7 +332,9 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 		return errors.WithMessage(err, "error saving current file info to db")
 	}
 
-	//Index block file location pointer updated with file suffex and offset for the new block
+	// TODO M1.4 学习该索引的建立，建立区块中身份证书的索引
+	// 后缀和偏移量
+	//Index block file location pointer updated with file suffix and offset for the new block
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
 	blockFLP.offset = currentOffset
 	// shift the txoffset because we prepend length of bytes before block bytes
