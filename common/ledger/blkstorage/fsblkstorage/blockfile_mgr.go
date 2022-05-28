@@ -210,6 +210,8 @@ func syncCPInfoFromFS(rootDir string, cpInfo *checkpointInfo) {
 }
 
 func deriveBlockfilePath(rootDir string, suffixNum int) string {
+	// M1.4 打印BlockFilePath
+	logger.Infof("BlockfilePath is: %s", rootDir+"/"+blockfilePrefix+fmt.Sprintf("%06d", suffixNum))
 	return rootDir + "/" + blockfilePrefix + fmt.Sprintf("%06d", suffixNum)
 }
 
