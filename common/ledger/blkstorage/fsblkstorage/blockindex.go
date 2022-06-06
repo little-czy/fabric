@@ -107,6 +107,8 @@ func (index *blockIndex) indexBlock(blockIdxInfo *blockIdxInfo) error {
 		return err
 	}
 
+	// TODO: M1.4 在这里进行证书信息的添加 --最简单的实现
+
 	// Index1
 	if index.isAttributeIndexed(blkstorage.IndexableAttrBlockHash) {
 		batch.Put(constructBlockHashKey(blockIdxInfo.blockHash), flpBytes)

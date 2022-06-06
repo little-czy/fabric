@@ -261,6 +261,7 @@ func (csp *CSP) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerO
 		return false, errors.Errorf("Unsupported 'VerifyKey' provided [%v]", k)
 	}
 
+	// M1.4 调用ECDSA verify
 	valid, err = verifier.Verify(k, signature, digest, opts)
 	if err != nil {
 		return false, errors.Wrapf(err, "Failed verifing with opts [%v]", opts)

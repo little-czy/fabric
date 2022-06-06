@@ -211,7 +211,7 @@ func syncCPInfoFromFS(rootDir string, cpInfo *checkpointInfo) {
 
 func deriveBlockfilePath(rootDir string, suffixNum int) string {
 	// M1.4 打印BlockFilePath
-	logger.Infof("BlockfilePath is: %s", rootDir+"/"+blockfilePrefix+fmt.Sprintf("%06d", suffixNum))
+	logger.Debugf("BlockfilePath is: %s", rootDir+"/"+blockfilePrefix+fmt.Sprintf("%06d", suffixNum))
 	return rootDir + "/" + blockfilePrefix + fmt.Sprintf("%06d", suffixNum)
 }
 
@@ -340,6 +340,7 @@ func (mgr *blockfileMgr) addBlock(block *common.Block) error {
 	blockFLP := &fileLocPointer{fileSuffixNum: newCPInfo.latestFileChunkSuffixNum}
 	blockFLP.offset = currentOffset
 	// shift the txoffset because we prepend length of bytes before block bytes
+	// M1.4 由于在块内容前写入了块长度，因此对每个交易的offset进行处理
 	for _, txOffset := range txOffsets {
 		txOffset.loc.offset += len(blockBytesEncodedLen)
 	}
