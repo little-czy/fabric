@@ -39,7 +39,7 @@ type DefaultEndorsement struct {
 // Or error on failure
 func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (*peer.Endorsement, []byte, error) {
 	// M1.4 测试Endorse背书签名的流程
-	logger.Infof("User default_endorsement")
+	logger.Debugf("Use default_endorsement")
 	signer, err := e.SigningIdentityForRequest(sp)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed fetching signing identity")
@@ -49,6 +49,9 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "could not serialize the signing identity")
 	}
+
+	// M1.4 打印peer签名使用的identityBytes
+	logger.Infof("endorer sign the proposal use identify: %s", string(identityBytes))
 
 	// sign the concatenation of the proposal response and the serialized endorser identity with this endorser's key
 	signature, err := signer.Sign(append(prpBytes, identityBytes...))

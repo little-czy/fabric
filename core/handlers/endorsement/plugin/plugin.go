@@ -45,7 +45,7 @@ type DefaultEndorsement struct {
 // Or error on failure
 func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (*peer.Endorsement, []byte, error) {
 	// M1.4 测试Endorse背书签名的流程
-	logger.Infof("User plugin_endorsement")
+	logger.Debugf("Use plugin_endorsement")
 
 	signer, err := e.SigningIdentityForRequest(sp)
 	if err != nil {
