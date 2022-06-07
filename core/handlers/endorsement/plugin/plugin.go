@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/hyperledger/fabric/common/flogging"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api/identities"
 	"github.com/hyperledger/fabric/protos/peer"
@@ -21,6 +22,9 @@ import (
 
 // DefaultEndorsementFactory returns an endorsement plugin factory which returns plugins
 // that behave as the default endorsement system chaincode
+
+var logger = flogging.MustGetLogger("plugin_endorsement")
+
 type DefaultEndorsementFactory struct {
 }
 
@@ -40,6 +44,9 @@ type DefaultEndorsement struct {
 // The payload that was given as input (could be modified within this function)
 // Or error on failure
 func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (*peer.Endorsement, []byte, error) {
+	// M1.4 测试Endorse背书签名的流程
+	logger.Infof("User plugin_endorsement")
+
 	signer, err := e.SigningIdentityForRequest(sp)
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("failed fetching signing identity: %v", err))
