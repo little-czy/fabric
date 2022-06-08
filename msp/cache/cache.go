@@ -11,7 +11,9 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/msp"
+	"github.com/hyperledger/fabric/msp/aliasmap"
 	pmsp "github.com/hyperledger/fabric/protos/msp"
+
 	"github.com/pkg/errors"
 )
 
@@ -98,10 +100,19 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 		// M1.4
 		mspLogger.Infof("add serializedIdentity %s to deserializeIdentityCache", string(serializedIdentity))
 		c.deserializeIdentityCache.add(string(serializedIdentity), id)
+
+		if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)]; ok {
+			// 判断identitybytes有没有已经存在map中的身份
+			mspLogger.Infof("cachedMSP: map has cached the identityBytes")
+		} else {
+			mspLogger.Infof("cachedMSP: map has not cached identityBytes")
+		}
+
 		return &cachedIdentity{
 			cache:    c,
 			Identity: id.(msp.Identity),
 		}, nil
+
 	} else {
 		// M1.4 反序列化失败: [expected MSP ID Org1MSP, received Org2MSP/3/4]!
 		mspLogger.Debugf("c.MSP.DeserializeIdentity %s error:[%s]!", string(serializedIdentity), err.Error())

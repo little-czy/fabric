@@ -24,6 +24,7 @@ import (
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/blockCache"
 	ledgerUtil "github.com/hyperledger/fabric/core/ledger/util"
 	"github.com/hyperledger/fabric/msp"
+	"github.com/hyperledger/fabric/msp/aliasmap"
 	"github.com/hyperledger/fabric/protos/common"
 	mspprotos "github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/protos/peer"
@@ -164,7 +165,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 
 	results := make(chan *blockValidationResult)
 
-	creatorsChan := make(chan validation.FixedLenCreatorBytes, 500)
+	creatorsChan := make(chan aliasmap.FixedLenCreatorBytes, 500)
 
 	go func() {
 		for tIdx, d := range block.Data.Data {
@@ -230,15 +231,15 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	for i := 0; i < taskNum; i++ {
 		oriCreatorBytes := <-creatorsChan
 		// int转[]byte
-		if _, ok := validation.AliasForCreator[oriCreatorBytes]; !ok {
+		if _, ok := aliasmap.AliasForCreator[oriCreatorBytes]; !ok {
 			//再进行一次判断，如果没有则存到map中
 			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
 			//如果没有则进行保存
 			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
 			// TODO concurrent map read and map write
-			validation.AliasForCreator[oriCreatorBytes] = []byte{byte(validation.CurEncode)}
-			validation.CurEncode++
-			logger.Infof("map %v to %v", string(oriCreatorBytes.Bytes()), validation.AliasForCreator[oriCreatorBytes])
+			aliasmap.AliasForCreator[oriCreatorBytes] = []byte{byte(aliasmap.CurEncode)}
+			aliasmap.CurEncode++
+			logger.Infof("map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
 			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
 		}
@@ -540,7 +541,7 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 // --M1.4
 // TODO: 写一个每个交易能传递creator的版本
 
-func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- validation.FixedLenCreatorBytes) {
+func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- aliasmap.FixedLenCreatorBytes) {
 	block := req.block
 	d := req.d
 	tIdx := req.tIdx

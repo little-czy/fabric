@@ -8,9 +8,9 @@ package builtin
 
 import (
 	"github.com/hyperledger/fabric/common/flogging"
-	"github.com/hyperledger/fabric/core/common/validation"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api/identities"
+	"github.com/hyperledger/fabric/msp/aliasmap"
 	"github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 )
@@ -61,7 +61,7 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	}
 
 	//TODO M1.4 修改这里的identityBytes为map中的内容
-	if _, ok := validation.AliasForCreator[validation.ToFixedLenCreatorBytes(identityBytes)]; ok {
+	if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]; ok {
 		// 判断identitybytes有没有已经存在map中的身份
 		logger.Infof("map has cached the identityBytes")
 	} else {
