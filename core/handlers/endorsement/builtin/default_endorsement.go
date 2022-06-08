@@ -8,6 +8,7 @@ package builtin
 
 import (
 	"github.com/hyperledger/fabric/common/flogging"
+	"github.com/hyperledger/fabric/core/common/validation"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api/identities"
 	"github.com/hyperledger/fabric/protos/peer"
@@ -51,13 +52,20 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	}
 
 	// M1.4 打印peer签名使用的identityBytes
-	logger.Infof("endorer sign the proposal use identify: %s", string(identityBytes))
+	logger.Debugf("endorer sign the proposal use identify: %s", string(identityBytes))
 
 	// sign the concatenation of the proposal response and the serialized endorser identity with this endorser's key
 	signature, err := signer.Sign(append(prpBytes, identityBytes...))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "could not sign the proposal response payload")
 	}
+
+	//TODO M1.4 修改这里的identityBytes为map中的内容
+	if _, ok := validation.AliasForCreator[validation.ToFixedLenCreatorBytes(identityBytes)]; ok {
+		// 判断identitybytes有没有已经存在map中的身份
+		logger.Infof("map has cached the identityBytes")
+	}
+
 	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes}
 	return endorsement, prpBytes, nil
 }
