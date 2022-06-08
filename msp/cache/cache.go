@@ -111,7 +111,6 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 			aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)] = []byte{byte(aliasmap.CurEncode)}
 			aliasmap.CurEncode++
 			mspLogger.Infof("map %v to %v", string(serializedIdentity), aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)])
-			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
 		}
 
