@@ -64,6 +64,8 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	if _, ok := validation.AliasForCreator[validation.ToFixedLenCreatorBytes(identityBytes)]; ok {
 		// 判断identitybytes有没有已经存在map中的身份
 		logger.Infof("map has cached the identityBytes")
+	} else {
+		logger.Infof("map has not cached identityBytes")
 	}
 
 	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes}
