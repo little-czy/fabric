@@ -757,6 +757,8 @@ func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfi
 	fixedC := aliasmap.ToFixedLenCreatorBytes(shdr.Creator)
 	putilsLogger.Infof("aliasmap.ToFixedLenCreatorBytes change %v to %v", shdr.Creator, fixedC)
 
+	putilsLogger.Infof("translate %v to %v", []byte{10, 7}, string([]byte{10, 7}))
+
 	if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
 		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
 		creatorsChan <- fixedC
