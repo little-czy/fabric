@@ -57,3 +57,13 @@ var CreaterForAlias = make(map[FixedLenAliasBytes][]byte)
 var CurEncode = 1
 
 var CreatorsChan = make(chan FixedLenCreatorBytes, 500)
+
+func (h FixedLenCreatorBytes) RecoverCreatorBytesLen() []byte {
+	// M1.4 去除定长的前导0
+	// 计算前导0的数量
+	zeroNum := 0
+	for i := 0; i < len(h) && h[i] == 0; i++ {
+		zeroNum++
+	}
+	return h[zeroNum:]
+}
