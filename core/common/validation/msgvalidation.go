@@ -756,7 +756,7 @@ func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfi
 
 	fixedC := aliasmap.ToFixedLenCreatorBytes(shdr.Creator)
 	putilsLogger.Infof("aliasmap.ToFixedLenCreatorBytes change %v to %v", shdr.Creator, fixedC)
-	putilsLogger.Infof("TEST RecoverCreatorBytesLen: %v", fixedC.RecoverCreatorBytesLen())
+	putilsLogger.Debugf("TEST RecoverCreatorBytesLen: %v", fixedC.RecoverCreatorBytesLen())
 
 	// putilsLogger.Infof("translate %v to %v", []byte{10, 7, 79, 114, 103, 49, 77, 83}, string([]byte{10, 7, 79, 114, 103, 49, 77, 83}))
 
