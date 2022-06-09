@@ -63,7 +63,7 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	//TODO M1.4 修改这里的identityBytes为map中的内容
 	if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]; ok {
 		// 判断identitybytes有没有已经存在map中的身份
-		logger.Infof("map has cached the identityBytes")
+		logger.Infof("map has cached the identityBytes: %s", string(aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]))
 	} else {
 		logger.Infof("map has not cached identityBytes")
 	}
