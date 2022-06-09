@@ -242,7 +242,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes([]byte{byte(aliasmap.CurEncode)})] = oriCreatorBytes.Bytes()
 
 			aliasmap.CurEncode++
-			logger.Infof("Validator：map %v to %v", oriCreatorBytes.Bytes(), aliasmap.AliasForCreator[oriCreatorBytes])
+			logger.Infof("Validator：map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
 			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
 		}
