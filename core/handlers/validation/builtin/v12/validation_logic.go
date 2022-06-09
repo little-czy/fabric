@@ -785,7 +785,7 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 
 			if _, ok := aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]; ok {
 				endorsement.Endorser = aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]
-				logger.Infof("recover Creator for Alias :%s", string(endorsement.Endorser))
+				logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
 			}
 		} else {
 			// TODO: 1.4 在这里可以获得endorser的证书
