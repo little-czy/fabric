@@ -34,3 +34,5 @@ var AliasForCreator = make(map[FixedLenCreatorBytes][]byte)
 
 // TODO 使用哈夫曼编码
 var CurEncode = 1
+
+var CreatorsChan = make(chan FixedLenCreatorBytes, 500)

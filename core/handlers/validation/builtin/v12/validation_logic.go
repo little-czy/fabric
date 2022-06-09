@@ -29,6 +29,7 @@ import (
 	. "github.com/hyperledger/fabric/core/handlers/validation/api/state"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric/core/scc/lscc"
+	"github.com/hyperledger/fabric/msp/aliasmap"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
 	"github.com/hyperledger/fabric/protos/msp"
@@ -777,7 +778,15 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 	// loop through each of the endorsements and build the signature set
 	for _, endorsement := range cap.Action.Endorsements {
 
-		// TODO ,1.4 在这里可以获得endorser的证书
+		// TODO: 1.4 在这里可以获得endorser的证书
+		// TODO: 映射到map中，如果MAP中没有对应的fixedC
+
+		// aliasmap.CreatorsChan
+		fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
+		if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
+			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+			aliasmap.CreatorsChan <- fixedC
+		}
 
 		//unmarshal endorser bytes
 		serializedIdentity := &msp.SerializedIdentity{}
@@ -785,6 +794,7 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 			logger.Errorf("Unmarshal endorser error: %s", err)
 			return nil, policyErr(fmt.Errorf("Unmarshal endorser error: %s", err))
 		}
+
 		identity := serializedIdentity.Mspid + string(serializedIdentity.IdBytes)
 
 		// M1.4 打印endorser的信息

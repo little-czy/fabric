@@ -165,7 +165,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 
 	results := make(chan *blockValidationResult)
 
-	creatorsChan := make(chan aliasmap.FixedLenCreatorBytes, 500)
+	// creatorsChan := make(chan aliasmap.FixedLenCreatorBytes, 500)
 
 	go func() {
 		for tIdx, d := range block.Data.Data {
@@ -175,11 +175,12 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			go func(index int, data []byte) {
 				defer v.Support.Release(1)
 
+				// TODO M1.4 该函数中不用传递creatorchan
 				v.validateTxWithCreator(&blockValidationRequest{
 					d:     data,
 					block: block,
 					tIdx:  index,
-				}, results, creatorsChan)
+				}, results, aliasmap.CreatorsChan)
 			}(tIdx, d)
 		}
 	}()
@@ -226,10 +227,10 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	// go func() {
 	// 这里也应该加一个锁，防止下一个区块开始执行
 	// 处理creator映射
-	taskNum := len(creatorsChan)
+	taskNum := len(aliasmap.CreatorsChan)
 	// 只需要确定同样的Creator会被映射成相同的值，而区块中天然有序
 	for i := 0; i < taskNum; i++ {
-		oriCreatorBytes := <-creatorsChan
+		oriCreatorBytes := <-aliasmap.CreatorsChan
 		// int转[]byte
 		if _, ok := aliasmap.AliasForCreator[oriCreatorBytes]; !ok {
 			//再进行一次判断，如果没有则存到map中

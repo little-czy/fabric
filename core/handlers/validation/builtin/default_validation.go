@@ -64,7 +64,7 @@ func (v *DefaultValidation) Validate(block *common.Block, namespace string, txPo
 	var err error
 	switch {
 	case v.Capabilities.V1_3Validation():
-		// M1.4 capabilities
+		// M1.4 capabilities 已经修改为使用v12
 		err = v.TxValidatorV1_3.Validate(block, namespace, txPosition, actionPosition, serializedPolicy.Bytes())
 
 	case v.Capabilities.V1_2Validation():

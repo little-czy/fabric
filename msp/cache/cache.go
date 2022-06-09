@@ -11,7 +11,6 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/msp"
-	"github.com/hyperledger/fabric/msp/aliasmap"
 	pmsp "github.com/hyperledger/fabric/protos/msp"
 
 	"github.com/pkg/errors"
@@ -102,17 +101,18 @@ func (c *cachedMSP) DeserializeIdentity(serializedIdentity []byte) (msp.Identity
 		c.deserializeIdentityCache.add(string(serializedIdentity), id)
 
 		// TODO: M1.4 在这里将没有出现错误的seriallizedIdentity加入aliasMap中
-		if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)]; !ok {
-			//再进行一次判断，如果没有则存到map中
-			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-			//如果没有则进行保存
-			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
-			// TODO concurrent map read and map write
-			aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)] = []byte{byte(aliasmap.CurEncode)}
-			aliasmap.CurEncode++
-			mspLogger.Infof("map %v to %v", string(serializedIdentity), aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)])
+		// TODO: 这里是并行的话，会产生冲突，需要统一进行处理
+		// if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)]; !ok {
+		// 	//再进行一次判断，如果没有则存到map中
+		// 	//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+		// 	//如果没有则进行保存
+		// 	// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
+		// 	// TODO concurrent map read and map write
+		// 	aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)] = []byte{byte(aliasmap.CurEncode)}
+		// 	aliasmap.CurEncode++
+		// 	mspLogger.Infof("map %v to %v", string(serializedIdentity), aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(serializedIdentity)])
 
-		}
+		// }
 
 		return &cachedIdentity{
 			cache:    c,
