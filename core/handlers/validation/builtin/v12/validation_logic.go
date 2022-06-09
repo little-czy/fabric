@@ -781,6 +781,8 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 		if len(endorsement.Endorser) < 10 {
 			// 如果endorsement数量小于10，说明是已经转换过的alias
 			// 复原需要一个反向的map
+			logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+
 			if _, ok := aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]; ok {
 				endorsement.Endorser = aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]
 				logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
