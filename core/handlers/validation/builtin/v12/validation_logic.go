@@ -778,13 +778,22 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 	// loop through each of the endorsements and build the signature set
 	for _, endorsement := range cap.Action.Endorsements {
 
-		// TODO: 1.4 在这里可以获得endorser的证书
-		// TODO: 映射到map中，如果MAP中没有对应的fixedC
-		// aliasmap.CreatorsChan
-		fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
-		if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
-			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-			aliasmap.CreatorsChan <- fixedC
+		if len(endorsement.Endorser) < 10 {
+			// 如果endorsement数量小于10，说明是已经转换过的alias
+			// 复原需要一个反向的map
+			if _, ok := aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]; ok {
+				endorsement.Endorser = aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]
+				logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+			}
+		} else {
+			// TODO: 1.4 在这里可以获得endorser的证书
+			// TODO: 映射到map中，如果MAP中没有对应的fixedC
+			// aliasmap.CreatorsChan
+			fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
+			if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
+				//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+				aliasmap.CreatorsChan <- fixedC
+			}
 		}
 
 		//unmarshal endorser bytes

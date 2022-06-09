@@ -63,9 +63,10 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	//TODO M1.4 修改这里的identityBytes为map中的内容
 	if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]; ok {
 		// 判断identitybytes有没有已经存在map中的身份
-		logger.Infof("map has cached the identityBytes: %v", aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)])
-	} else {
-		logger.Infof("map has not cached identityBytes")
+		logger.Debugf("map has cached the identityBytes: %v", aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)])
+		// 如果已经缓存了，则直接使用缓存结果构造endorsement，判断的时候可以根据长度进行判断
+		endorsement := &peer.Endorsement{Signature: signature, Endorser: aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]}
+		return endorsement, prpBytes, nil
 	}
 
 	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes}

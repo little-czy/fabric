@@ -239,6 +239,8 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
 			// TODO concurrent map read and map write
 			aliasmap.AliasForCreator[oriCreatorBytes] = []byte{byte(aliasmap.CurEncode)}
+			aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes([]byte{byte(aliasmap.CurEncode)})] = oriCreatorBytes.Bytes()
+
 			aliasmap.CurEncode++
 			logger.Infof("Validator：map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
 			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
