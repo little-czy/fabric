@@ -240,7 +240,7 @@ func (v *TxValidator) Validate(block *common.Block) error {
 			// TODO concurrent map read and map write
 			aliasmap.AliasForCreator[oriCreatorBytes] = []byte{byte(aliasmap.CurEncode)}
 			aliasmap.CurEncode++
-			logger.Infof("map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
+			logger.Infof("Validator：map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
 			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
 		}

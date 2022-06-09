@@ -780,7 +780,6 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 
 		// TODO: 1.4 在这里可以获得endorser的证书
 		// TODO: 映射到map中，如果MAP中没有对应的fixedC
-
 		// aliasmap.CreatorsChan
 		fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
 		if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
