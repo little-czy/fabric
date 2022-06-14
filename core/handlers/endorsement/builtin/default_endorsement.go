@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric/common/flogging"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api"
 	. "github.com/hyperledger/fabric/core/handlers/endorsement/api/identities"
+	"github.com/hyperledger/fabric/msp/aliasmap"
 	"github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 )
@@ -59,14 +60,14 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 		return nil, nil, errors.Wrapf(err, "could not sign the proposal response payload")
 	}
 
-	// //TODO M1.4 修改这里的identityBytes为map中的内容
-	// if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]; ok {
-	// 	// M1.4 判断identitybytes有没有已经存在map中的身份
-	// 	logger.Debugf("map has cached the identityBytes: %v", aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)])
-	// 	// M1.4 如果已经缓存了，则直接使用缓存结果构造endorsement，判断的时候可以根据长度进行判断
-	// 	endorsement := &peer.Endorsement{Signature: signature, Endorser: aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]}
-	// 	return endorsement, prpBytes, nil
-	// }
+	//TODO M1.4 修改这里的identityBytes为map中的内容
+	if _, ok := aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)]; ok {
+		// M1.4 判断identitybytes有没有已经存在map中的身份
+		logger.Debugf("map has cached the identityBytes: %v", aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)])
+		// M1.4 如果已经缓存了，则直接使用缓存结果构造endorsement，判断的时候可以根据长度进行判断
+		endorsement := &peer.Endorsement{Signature: signature, Endorser: aliasmap.AliasForCreator[aliasmap.ToFixedLenCreatorBytes(identityBytes)].Bytes()}
+		return endorsement, prpBytes, nil
+	}
 
 	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes}
 	return endorsement, prpBytes, nil

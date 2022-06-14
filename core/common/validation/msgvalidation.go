@@ -720,7 +720,7 @@ func ValidateTransactionWithTxIndex(e *common.Envelope, c channelconfig.Applicat
 // var CurEncode = 1
 
 // ValidateTransaction checks that the transaction envelope is properly formed
-func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int, creatorsChan chan<- aliasmap.FixedLenCreatorBytes) (*common.Payload, pb.TxValidationCode) {
+func ValidateTransactionWithTxIndexAndCreator(blockNumber uint64, e *common.Envelope, c channelconfig.ApplicationCapabilities, tIdx int, creatorsChan chan<- *aliasmap.CertInfo) (*common.Payload, pb.TxValidationCode) {
 	putilsLogger.Debugf("ValidateTransactionEnvelope starts for envelope %p", e)
 
 	// check for nil argument
@@ -762,7 +762,14 @@ func ValidateTransactionWithTxIndexAndCreator(e *common.Envelope, c channelconfi
 
 	if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
 		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-		creatorsChan <- fixedC
+		// 这里无法获取bolckNumber，不存在EndorserNumber
+		FixedCert := &aliasmap.CertInfo{
+			Cert:       fixedC,
+			BlockNo:    blockNumber,
+			TxNo:       tIdx,
+			EndorserNo: 0,
+		}
+		creatorsChan <- FixedCert
 	}
 
 	// TODO 在背书的时候查表，如果存在则用转换之后的

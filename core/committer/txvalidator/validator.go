@@ -230,19 +230,39 @@ func (v *TxValidator) Validate(block *common.Block) error {
 	taskNum := len(aliasmap.CreatorsChan)
 	// 只需要确定同样的Creator会被映射成相同的值，而区块中天然有序
 	for i := 0; i < taskNum; i++ {
-		oriCreatorBytes := <-aliasmap.CreatorsChan
+		// oriCreatorBytes := <-aliasmap.CreatorsChan
+		// // int转[]byte
+		// if _, ok := aliasmap.AliasForCreator[oriCreatorBytes]; !ok {
+		// 	//再进行一次判断，如果没有则存到map中
+		// 	//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+		// 	//如果没有则进行保存
+		// 	// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
+		// 	// TODO concurrent map read and map write
+		// 	aliasmap.AliasForCreator[oriCreatorBytes] = []byte{byte(aliasmap.CurEncode)}
+		// 	aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasBytes([]byte{byte(aliasmap.CurEncode)})] = oriCreatorBytes.RecoverCreatorBytesLen()
+
+		// 	aliasmap.CurEncode++
+		// 	logger.Infof("Validator: map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
+		// 	// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
+
+		// }
+
+		oriCertInfo := <-aliasmap.CreatorsChan
 		// int转[]byte
-		if _, ok := aliasmap.AliasForCreator[oriCreatorBytes]; !ok {
+		if _, ok := aliasmap.AliasForCreator[oriCertInfo.Cert]; !ok {
 			//再进行一次判断，如果没有则存到map中
 			//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
 			//如果没有则进行保存
 			// TODO 写一个int转byte的函数，目前来说creator的数量比较少，直接使用强转，能表示的范围只有0~255
 			// TODO concurrent map read and map write
-			aliasmap.AliasForCreator[oriCreatorBytes] = []byte{byte(aliasmap.CurEncode)}
-			aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes([]byte{byte(aliasmap.CurEncode)})] = oriCreatorBytes.RecoverCreatorBytesLen()
+
+			// TODO 将该步骤的key转换为hash，减小map的key大小
+			aliasmap.AliasForCreator[oriCertInfo.Cert] = aliasmap.SetAliasValue(oriCertInfo.BlockNo, uint16(oriCertInfo.TxNo), uint16(oriCertInfo.EndorserNo))
+
+			// aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasBytes([]byte{byte(aliasmap.CurEncode)})] = oriCreatorBytes.RecoverCreatorBytesLen()
 
 			aliasmap.CurEncode++
-			logger.Infof("Validator: map %v to %v", string(oriCreatorBytes.Bytes()), aliasmap.AliasForCreator[oriCreatorBytes])
+			logger.Infof("Validator: map %v to %v", string(oriCertInfo.Cert.Bytes()), aliasmap.AliasForCreator[oriCertInfo.Cert])
 			// logger.Infof("map %v to %v", oriCreatorBytes, validation.AliasForCreator[oriCreatorBytes])
 
 		}
@@ -544,7 +564,7 @@ func (v *TxValidator) validateTx(req *blockValidationRequest, results chan<- *bl
 // --M1.4
 // TODO: 写一个每个交易能传递creator的版本
 
-func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- aliasmap.FixedLenCreatorBytes) {
+func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results chan<- *blockValidationResult, creatorsChan chan<- *aliasmap.CertInfo) {
 	block := req.block
 	d := req.d
 	tIdx := req.tIdx
@@ -584,7 +604,7 @@ func (v *TxValidator) validateTxWithCreator(req *blockValidationRequest, results
 		var txsChaincodeName *sysccprovider.ChaincodeInstance
 		var txsUpgradedChaincode *sysccprovider.ChaincodeInstance
 
-		if payload, txResult = validation.ValidateTransactionWithTxIndexAndCreator(env, v.Support.Capabilities(), tIdx, creatorsChan); txResult != peer.TxValidationCode_VALID {
+		if payload, txResult = validation.ValidateTransactionWithTxIndexAndCreator(block.Header.Number, env, v.Support.Capabilities(), tIdx, creatorsChan); txResult != peer.TxValidationCode_VALID {
 			logger.Errorf("Invalid transaction with index %d", tIdx)
 			results <- &blockValidationResult{
 				tIdx:           tIdx,

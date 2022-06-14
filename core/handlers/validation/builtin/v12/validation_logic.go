@@ -135,7 +135,8 @@ func (vscc *Validator) Validate(
 		return policyErr(err)
 	}
 
-	signatureSet, err := vscc.deduplicateIdentity(cap)
+	// signatureSet, err := vscc.deduplicateIdentity(cap)
+	signatureSet, err := vscc.deduplicateIdentityAndMap(cap, txPosition, block.Header.Number)
 	if err != nil {
 		return policyErr(err)
 	}
@@ -778,15 +779,84 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 	// loop through each of the endorsements and build the signature set
 	for _, endorsement := range cap.Action.Endorsements {
 
-		if len(endorsement.Endorser) < 10 {
-			// 如果endorsement数量小于10，说明是已经转换过的alias
+		// if len(endorsement.Endorser) < 10 {
+		// 	// 如果endorsement数量小于10，说明是已经转换过的alias
+		// 	// 复原需要一个反向的map
+		// 	logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+
+		// 	if _, ok := aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]; ok {
+
+		// 		endorsement.Endorser = aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]
+		// 		// logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+		// 	}
+
+		// } else {
+		// 	// TODO: 1.4 在这里可以获得endorser的证书
+		// 	// TODO: 映射到map中，如果MAP中没有对应的fixedC
+		// 	// aliasmap.CreatorsChan
+		// 	fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
+		// 	if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
+		// 		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+		// 		aliasmap.CreatorsChan <- fixedC
+		// 	}
+		// }
+
+		//unmarshal endorser bytes
+		serializedIdentity := &msp.SerializedIdentity{}
+		if err := proto.Unmarshal(endorsement.Endorser, serializedIdentity); err != nil {
+			logger.Errorf("Unmarshal endorser error: %s", err)
+			return nil, policyErr(fmt.Errorf("Unmarshal endorser error: %s", err))
+		}
+
+		identity := serializedIdentity.Mspid + string(serializedIdentity.IdBytes)
+
+		// M1.4 打印endorser的信息
+		logger.Debugf("endorser identity's, Mspid:%s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
+
+		if _, ok := signatureMap[identity]; ok {
+			// Endorsement with the same identity has already been added
+			logger.Warningf("Ignoring duplicated identity, Mspid: %s, pem:\n%s", serializedIdentity.Mspid, serializedIdentity.IdBytes)
+			continue
+		}
+		data := make([]byte, len(prespBytes)+len(endorsement.Endorser))
+		copy(data, prespBytes)
+		copy(data[len(prespBytes):], endorsement.Endorser)
+		signatureSet = append(signatureSet, &common.SignedData{
+			// set the data that is signed; concatenation of proposal response bytes and endorser ID
+			Data: data,
+			// set the identity that signs the message: it's the endorser
+			Identity: endorsement.Endorser,
+			// set the signature
+			Signature: endorsement.Signature})
+		signatureMap[identity] = struct{}{}
+	}
+
+	logger.Debugf("Signature set is of size %d out of %d endorsement(s)", len(signatureSet), len(cap.Action.Endorsements))
+	return signatureSet, nil
+}
+
+func (vscc *Validator) deduplicateIdentityAndMap(cap *pb.ChaincodeActionPayload, txPosition int, blockNumber uint64) ([]*common.SignedData, error) {
+	// this is the first part of the signed message
+	prespBytes := cap.Action.ProposalResponsePayload
+
+	// build the signature set for the evaluation
+	signatureSet := []*common.SignedData{}
+	signatureMap := make(map[string]struct{})
+	// loop through each of the endorsements and build the signature set
+	for endorserNumber, endorsement := range cap.Action.Endorsements {
+
+		if len(endorsement.Endorser) == 12 {
+			// 如果endorsement数量等于12，说明是已经转换过的alias
 			// 复原需要一个反向的map
 			logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
 
-			if _, ok := aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]; ok {
+			if _, ok := aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasValue(endorsement.Endorser)]; ok {
 
-				endorsement.Endorser = aliasmap.CreaterForAlias[aliasmap.ToFixedLenAliasBytes(endorsement.Endorser)]
+				endorsement.Endorser = aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasValue(endorsement.Endorser)]
 				// logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+			} else {
+				// TODO 如果没找到对应的缓存，则直接报错
+				logger.Warnf("Can't find Original Creator for Alias: %v", endorsement.Endorser)
 			}
 
 		} else {
@@ -796,7 +866,13 @@ func (vscc *Validator) deduplicateIdentity(cap *pb.ChaincodeActionPayload) ([]*c
 			fixedC := aliasmap.ToFixedLenCreatorBytes(endorsement.Endorser)
 			if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
 				//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
-				aliasmap.CreatorsChan <- fixedC
+				FixedCert := &aliasmap.CertInfo{
+					Cert:       fixedC,
+					TxNo:       txPosition,
+					EndorserNo: endorserNumber,
+					BlockNo:    blockNumber,
+				}
+				aliasmap.CreatorsChan <- FixedCert
 			}
 		}
 
