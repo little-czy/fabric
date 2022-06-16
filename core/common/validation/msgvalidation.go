@@ -156,6 +156,40 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, ChainID string) error {
 	putilsLogger.Debugf("begin")
 
+	// TODO: M1.4 如果creatorBytes为12字节，即使用了转换过后的字节，需要进行一个恢复
+	if len(creatorBytes) == 12 {
+		// 如果endorsement数量等于12，说明是已经转换过的alias
+		// 复原需要一个反向的map
+		putilsLogger.Infof("recover Creator for Alias :%v", creatorBytes)
+
+		if _, ok := aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasValue(creatorBytes)]; ok {
+
+			creatorBytes = aliasmap.CreatorForAlias[aliasmap.ToFixedLenAliasValue(creatorBytes)]
+			// logger.Infof("recover Creator for Alias :%v", endorsement.Endorser)
+		} else {
+			// TODO 如果没找到对应的缓存，则直接报错
+			putilsLogger.Warnf("Can't find Original Creator for Alias: %v", creatorBytes)
+		}
+
+	}
+	// TODO: M1.4 暂时不实现creator的证书的替换，待实现
+	// else {
+	// 	// TODO: 1.4 在这里可以获得endorser的证书
+	// 	// TODO: 映射到map中，如果MAP中没有对应的fixedC
+	// 	// aliasmap.CreatorsChan
+	// 	fixedC := aliasmap.ToFixedLenCreatorBytes(creatorBytes)
+	// 	if _, ok := aliasmap.AliasForCreator[fixedC]; !ok {
+	// 		//if MAP 里没有保存该creator 则将该creator发送到channel中建立映射
+	// 		FixedCert := &aliasmap.CertInfo{
+	// 			Cert:       fixedC,
+	// 			TxNo:       txPosition,
+	// 			EndorserNo: endorserNumber,
+	// 			BlockNo:    blockNumber,
+	// 		}
+	// 		aliasmap.CreatorsChan <- FixedCert
+	// 	}
+	// }
+
 	// check for nil argument
 	if creatorBytes == nil || sig == nil || msg == nil {
 		return errors.New("nil arguments")
