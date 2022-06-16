@@ -156,7 +156,7 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, ChainID string) error {
 	putilsLogger.Debugf("begin")
 
-	// TODO: M1.4 如果creatorBytes为12字节，即使用了转换过后的字节，需要进行一个恢复
+	// TODO: M1.4 如果creatorBytes为12字节，即使用了转换过后的字节，需要进行恢复
 	if len(creatorBytes) == 12 {
 		// 如果endorsement数量等于12，说明是已经转换过的alias
 		// 复原需要一个反向的map
