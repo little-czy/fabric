@@ -61,7 +61,7 @@ RUN apt update && apt install -y \
     jq \
     tzdata
 
-RUN curl -sL https://go.dev/dl/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxvf - -C /usr/local
+RUN curl -sL https://mirrors.aliyun.com/golang/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxvf - -C /usr/local
 ENV PATH="/usr/local/go/bin:$PATH"
 
 # set up nsswitch.conf for Go's "netgo" implementation
