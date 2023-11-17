@@ -35,7 +35,7 @@ RUN apt update && apt install -y \
     curl \
     make
 
-RUN curl -sL https://go.dev/dl/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxf - -C /usr/local
+RUN curl -sL https://mirrors.aliyun.com/golang/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxf - -C /usr/local
 ENV PATH="/usr/local/go/bin:$PATH"
 
 ADD . .

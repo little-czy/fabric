@@ -30,7 +30,7 @@ RUN apt update && apt install -y \
     gcc \
     git
 
-RUN curl -sL https://go.dev/dl/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxvf - -C /usr/local
+RUN curl -sL https://mirrors.aliyun.com/golang/go${GO_VER}.${TARGETOS}-${TARGETARCH}.tar.gz | tar zxvf - -C /usr/local
 ENV PATH="/usr/local/go/bin:$PATH"
 
 RUN addgroup --gid 500 chaincode
