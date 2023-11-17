@@ -58,7 +58,7 @@ else
 PROJECT_NAME = hyperledger/fabric
 endif
 
-BUILD_DIR ?= .build
+BUILD_DIR ?= build
 
 EXTRA_VERSION ?= $(shell git rev-parse --short HEAD)
 PROJECT_VERSION=$(BASE_VERSION)-snapshot-$(EXTRA_VERSION)
