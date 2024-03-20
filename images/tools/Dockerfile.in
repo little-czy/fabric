@@ -15,8 +15,8 @@ FROM _BASE_NS_/fabric-baseimage:_BASE_TAG_
 ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
 # ignore "apt-utils is not installed" warning
 # RUN apt-get install --assume-yes apt-utils
-RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
-RUN sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.cloud.aliyuncs.com/@g /etc/apt/sources.list
+RUN sed -i s@/security.ubuntu.com/@/mirrors.cloud.aliyuncs.com/@g /etc/apt/sources.list
 RUN apt-get clean
 RUN apt-get update && apt-get install -y jq
 VOLUME /etc/hyperledger/fabric
